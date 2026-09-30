@@ -1,30 +1,39 @@
 import winston from "winston";
-import path from "path";
+import { mkdirSync } from "node:fs";
 
-// Define log format
-const logFormat = winston.format.printf(({ level, message, timestamp }) => {
-  return `${timestamp} [${level.toUpperCase()}]: ${message}`;
-});
+const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === "development";
+if (isDevelopment) mkdirSync("logs", { recursive: true });
+const consoleFormat = isProduction
+  ? winston.format.json()
+  : winston.format.printf(({ level, message, timestamp, stack }) => {
+      return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
+    });
 
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
-    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    logFormat
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    consoleFormat,
   ),
-  transports: [
-    // Write all logs with level `error` and below to `error.log`
-    new winston.transports.File({
-      filename: "logs/error.log",
-      level: "error",
-    }),
-    // Write all logs with level `info` and below to `request.log`
-    new winston.transports.File({ filename: "logs/request.log" }),
-    // Also log to console
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), logFormat),
-    }),
-  ],
+  transports: isProduction
+    ? [new winston.transports.Console()]
+    : isDevelopment
+      ? [
+        new winston.transports.File({
+          filename: "logs/error.log",
+          level: "error",
+        }),
+        new winston.transports.File({ filename: "logs/request.log" }),
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            consoleFormat,
+          ),
+        }),
+      ]
+      : [new winston.transports.Console({ format: consoleFormat })],
 });
 
 export default logger;

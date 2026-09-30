@@ -34,23 +34,8 @@ const Products = () => {
     setLoading(true);
     try {
       const data = await getProducts({ page: currentPage, limit });
-
-      if (data.products && Array.isArray(data.products)) {
-        setProducts(data.products);
-        setTotalPages(
-          data.totalPages ||
-            Math.ceil((data.totalCount || data.count) / limit) ||
-            1
-        );
-      } else if (Array.isArray(data)) {
-        // Fallback if API returns just array
-        // Client side pagination fallback could go here if needed
-        setProducts(data);
-        setTotalPages(1);
-      } else {
-        setProducts([]);
-        setTotalPages(1);
-      }
+      setProducts(data.items);
+      setTotalPages(data.pages);
     } catch {
       setError("Failed to load products.");
     } finally {

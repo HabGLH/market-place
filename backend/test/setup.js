@@ -1,6 +1,13 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import Link from "mongoose"; // Just to be consistent? No.
 import mongoose from "mongoose";
+
+process.env.MONGO_URL ||= "mongodb://127.0.0.1:27017/marketplace-test";
+process.env.ACCESS_TOKEN_SECRET ||=
+  "test-access-token-secret-with-adequate-length";
+process.env.CLIENT_URL ||= "http://localhost:5173";
+process.env.CHAPA_SECRET_KEY ||= "test-chapa-secret";
+process.env.CHAPA_WEBHOOK_SECRET ||= "test-webhook-secret";
+
 // Force model registration
 import "../models/User.js";
 import "../models/Product.js";

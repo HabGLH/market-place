@@ -27,32 +27,11 @@ const HomePage = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const queryParams = {
-          page: currentPage,
-          limit: limit,
-          category: filter !== "all" ? filter : undefined,
-        };
+        const queryParams = { page: currentPage, limit };
         const data = await getProducts(queryParams);
-
-        // Handle different possible response structures
-        if (data.products && Array.isArray(data.products)) {
-          setProducts(data.products);
-          setTotalPages(
-            data.totalPages ||
-              Math.ceil((data.totalCount || data.count) / limit) ||
-              1
-          );
-        } else if (Array.isArray(data)) {
-          // Fallback if API returns just array (handle client-side pagination if needed, but safer to assume slice)
-          setProducts(data);
-          setTotalPages(1);
-        } else if (data.data && Array.isArray(data.data)) {
-          setProducts(data.data);
-          setTotalPages(data.last_page || 1);
-        } else {
-          setProducts([]);
-        }
-      } catch (err) {
+        setProducts(data.items);
+        setTotalPages(data.pages);
+      } catch {
         setError("Failed to load products.");
       } finally {
         setLoading(false);
@@ -88,12 +67,7 @@ const HomePage = () => {
     }
   };
 
-  // Filter products (placeholder for real categories)
-  const filteredProducts = products.filter((product) => {
-    if (filter === "all") return true;
-    // Add real category filtering when backend supports it
-    return true;
-  });
+  const filteredProducts = products;
 
   if (loading) return <Loader />;
   if (error) return <ErrorMessage message={error} />;

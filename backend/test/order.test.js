@@ -87,4 +87,14 @@ describe("Order API", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
   });
+
+  it("should reject an invalid order status", async () => {
+    const res = await request(app)
+      .put("/api/orders/507f1f77bcf86cd799439011/status")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "Paid" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Invalid request/);
+  });
 });

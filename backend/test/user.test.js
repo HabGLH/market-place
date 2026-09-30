@@ -48,6 +48,40 @@ describe("User API", () => {
     expect(res.body.name).toBe("Updated Name");
   });
 
+  it("should require the current password for email or password changes", async () => {
+    const emailRes = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ email: "changed@example.com" });
+    const passwordRes = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ password: "newpassword123" });
+
+    expect(emailRes.statusCode).toBe(400);
+    expect(passwordRes.statusCode).toBe(400);
+  });
+
+  it("should allow email changes with the correct current password", async () => {
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ email: "changed@example.com", currentPassword: "password123" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.email).toBe("changed@example.com");
+  });
+
+  it("should reject sensitive profile changes with an incorrect current password", async () => {
+    const res = await request(app)
+      .put("/api/users/me")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ email: "changed@example.com", currentPassword: "incorrect" });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.message).toBe("Current password is incorrect");
+  });
+
   it("should list all users (Admin)", async () => {
     const res = await request(app)
       .get("/api/users")

@@ -11,31 +11,83 @@ import {
 } from "../controllers/productController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
+import validateRequest from "../middleware/validateRequest.js";
+import {
+  createProductSchema,
+  productIdParamsSchema,
+  productListQuerySchema,
+  stockSchema,
+  updateProductSchema,
+} from "../validation/schemas.js";
 
 const router = express.Router();
 
 /* =====================
    PUBLIC ROUTES
 ===================== */
-router.get("/", getAllProducts); // GET /api/products
+router.get(
+  "/",
+  validateRequest({ query: productListQuerySchema }),
+  getAllProducts,
+); // GET /api/products
 
 /* =====================
    ADMIN ROUTES (STATIC FIRST)
 ===================== */
 router.get("/admin", authenticateToken, roleMiddleware(), getAdminProducts);
 
-router.post("/", authenticateToken, roleMiddleware(), createProduct);
+router.post(
+  "/",
+  authenticateToken,
+  roleMiddleware(),
+  validateRequest({ body: createProductSchema }),
+  createProduct,
+);
 
-router.put("/:id/enable", authenticateToken, roleMiddleware(), enableProduct);
-router.put("/:id/stock", authenticateToken, roleMiddleware(), updateStock);
+router.put(
+  "/:id/enable",
+  authenticateToken,
+  roleMiddleware(),
+  validateRequest({ params: productIdParamsSchema }),
+  enableProduct,
+);
+router.put(
+  "/:id/stock",
+  authenticateToken,
+  roleMiddleware(),
+  validateRequest({
+    params: productIdParamsSchema,
+    body: stockSchema,
+  }),
+  updateStock,
+);
 
 /* =====================
    DYNAMIC ROUTES (LAST)
 ===================== */
-router.get("/:id", getProductById);
+router.get(
+  "/:id",
+  validateRequest({ params: productIdParamsSchema }),
+  getProductById,
+);
 
-router.put("/:id", authenticateToken, roleMiddleware(), updateProduct);
+router.put(
+  "/:id",
+  authenticateToken,
+  roleMiddleware(),
+  validateRequest({
+    params: productIdParamsSchema,
+    body: updateProductSchema,
+  }),
+  updateProduct,
+);
 
-router.delete("/:id", authenticateToken, roleMiddleware(), deleteProduct);
+router.delete(
+  "/:id",
+  authenticateToken,
+  roleMiddleware(),
+  validateRequest({ params: productIdParamsSchema }),
+  deleteProduct,
+);
 
 export default router;

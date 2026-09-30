@@ -71,4 +71,14 @@ describe("Cart API", () => {
     expect(res.body.items).toHaveLength(0);
     expect(res.body.totalPrice).toBe(0);
   });
+
+  it("should reject invalid cart quantities", async () => {
+    const res = await request(app)
+      .post("/api/cart/add")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ productId, quantity: 0 });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Invalid request/);
+  });
 });

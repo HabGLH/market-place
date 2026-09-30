@@ -23,6 +23,22 @@ export const getMe = asyncHandler(async (req, res) => {
 export const updateMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
   if (user) {
+    const emailChanged = req.body.email && req.body.email !== user.email;
+    const passwordChanged = Boolean(req.body.password);
+
+    if (emailChanged || passwordChanged) {
+      if (!req.body.currentPassword) {
+        throw new AppError("Current password is required", 400);
+      }
+      const currentPasswordMatches = await bcrypt.compare(
+        req.body.currentPassword,
+        user.password,
+      );
+      if (!currentPasswordMatches) {
+        throw new AppError("Current password is incorrect", 401);
+      }
+    }
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 

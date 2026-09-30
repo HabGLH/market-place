@@ -9,8 +9,34 @@ import AppError from "../utils/AppError.js";
 // @route   GET /api/products
 // @access  Public
 export const getAllProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({ isActive: true });
-  res.json(products);
+  const { page, limit, q, category, sort: sortOption } = req.query;
+  const filter = { isActive: true };
+  if (category) filter.category = category;
+  if (q) filter.$text = { $search: q };
+
+  const sort = {
+    newest: { createdAt: -1 },
+    oldest: { createdAt: 1 },
+    price_asc: { price: 1 },
+    price_desc: { price: -1 },
+    name_asc: { name: 1 },
+  }[sortOption];
+
+  const [items, total] = await Promise.all([
+    Product.find(filter)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  res.json({
+    items,
+    page,
+    pages: Math.max(1, Math.ceil(total / limit)),
+    total,
+  });
 });
 
 // @desc    Get product by ID

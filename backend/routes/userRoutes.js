@@ -11,6 +11,8 @@ import {
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
+import validateRequest from "../middleware/validateRequest.js";
+import { updateMeSchema } from "../validation/schemas.js";
 
 const router = express.Router();
 
@@ -18,7 +20,7 @@ const router = express.Router();
 router
   .route("/me")
   .get(authenticateToken, getMe) // Get logged-in user profile
-  .put(authenticateToken, updateMe); // Update logged-in user profile
+  .put(authenticateToken, validateRequest({ body: updateMeSchema }), updateMe); // Update logged-in user profile
 
 // Admin-only routes
 router.route("/").get(authenticateToken, roleMiddleware(), getAllUsers); // Admin: list users

@@ -74,8 +74,50 @@ describe("Product API", () => {
 
     const res = await request(app).get("/api/products");
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items.length).toBeGreaterThan(0);
+    expect(res.body).toMatchObject({ page: 1, pages: 1, total: 1 });
+  });
+
+  it("should paginate, search, filter, and sort products", async () => {
+    await Product.insertMany([
+      {
+        name: "Wireless Keyboard A",
+        description: "Compact keyboard",
+        price: 900,
+        category: "Electronics",
+        stock: 8,
+      },
+      {
+        name: "Wireless Keyboard B",
+        description: "Ergonomic keyboard",
+        price: 700,
+        category: "Electronics",
+        stock: 5,
+      },
+      {
+        name: "Wireless Mouse",
+        description: "Optical device",
+        price: 300,
+        category: "Accessories",
+        stock: 6,
+      },
+    ]);
+
+    const res = await request(app).get(
+      "/api/products?q=keyboard&category=Electronics&sort=price_asc&page=1&limit=1",
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ page: 1, pages: 2, total: 2 });
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].name).toBe("Wireless Keyboard B");
+  });
+
+  it("should reject invalid product listing options", async () => {
+    const res = await request(app).get("/api/products?page=0&limit=1000");
+
+    expect(res.statusCode).toBe(400);
   });
 
   it("should update product stock (Admin)", async () => {

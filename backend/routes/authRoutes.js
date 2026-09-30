@@ -13,11 +13,23 @@ import {
 } from "../controllers/authController.js";
 import { authLimiter } from "../middleware/rateLimitMiddleware.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import validateRequest from "../middleware/validateRequest.js";
+import { loginSchema, registerSchema } from "../validation/schemas.js";
 
 const router = express.Router();
 
-router.post("/register", authLimiter, register);
-router.post("/login", authLimiter, login);
+router.post(
+  "/register",
+  authLimiter,
+  validateRequest({ body: registerSchema }),
+  register,
+);
+router.post(
+  "/login",
+  authLimiter,
+  validateRequest({ body: loginSchema }),
+  login,
+);
 router.post("/refresh", authLimiter, refresh);
 router.post("/logout", logout);
 router.post("/revoke", authenticateToken, revokeToken);

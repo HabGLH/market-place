@@ -24,6 +24,17 @@ describe("Auth API", () => {
     expect(res.body.message).toBe("User already exists");
   });
 
+  it("should reject invalid registration payloads", async () => {
+    const res = await request(app).post("/api/auth/register").send({
+      ...userData,
+      email: "not-an-email",
+      password: "short",
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Invalid request/);
+  });
+
   it("should login with correct credentials", async () => {
     await request(app).post("/api/auth/register").send(userData);
 
@@ -98,5 +109,34 @@ describe("Auth API", () => {
     expect(health.statusCode).toBe(200);
     expect(health.body.status).toBe("OK");
     expect(app.get("trust proxy")).toBe(1);
+  });
+
+  it("should allow credentialed CORS only from the configured client", async () => {
+    const allowed = await request(app)
+      .get("/health")
+      .set("Origin", "http://localhost:5173");
+    const blocked = await request(app)
+      .get("/health")
+      .set("Origin", "https://unexpected.example");
+
+    expect(allowed.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:5173",
+    );
+    expect(allowed.headers["access-control-allow-credentials"]).toBe("true");
+    expect(blocked.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:5173",
+    );
+    expect(blocked.headers["access-control-allow-origin"]).not.toBe(
+      "https://unexpected.example",
+    );
+  });
+
+  it("should reject JSON payloads larger than 10kb", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .set("Content-Type", "application/json")
+      .send(`{"padding":"${"x".repeat(11 * 1024)}"}`);
+
+    expect(res.statusCode).toBe(413);
   });
 });

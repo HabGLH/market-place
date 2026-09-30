@@ -12,12 +12,12 @@ describe("Admin Dashboard API", () => {
     const adminRes = await request(app).post("/api/auth/register").send({
       name: "Habtamu Genet",
       email: "admin@test.com",
-      password: "123456",
+      password: "password123",
     });
     await User.updateOne({ email: "admin@test.com" }, { role: 1 });
     const adminLogin = await request(app).post("/api/auth/login").send({
       email: "admin@test.com",
-      password: "123456",
+      password: "password123",
     });
     adminToken = adminLogin.body.accessToken;
 
