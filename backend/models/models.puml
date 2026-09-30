@@ -1,0 +1,89 @@
+@startuml
+title Backend Models UML - Ecommerce
+skinparam classAttributeIconSize 0
+
+class User {
+  +ObjectId _id
+  +name: String
+  +email: String
+  +password: String
+  +role: Number
+  +status: String
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Product {
+  +ObjectId _id
+  +name: String
+  +description: String
+  +price: Number
+  +category: String
+  +stock: Number
+  +images: String[]
+  +rating: Number
+  +isActive: Boolean
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Cart {
+  +ObjectId _id
+  +userId: ObjectId
+  +items: [{product: ObjectId, quantity: Number}]
+  +totalPrice: Number
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Order {
+  +ObjectId _id
+  +userId: ObjectId
+  +products: [{productId: ObjectId, quantity: Number, price: Number}]
+  +totalAmount: Number
+  +paymentMethod: String
+  +orderStatus: String
+  +createdAt: Date
+}
+
+class Payment {
+  +ObjectId _id
+  +userId: ObjectId
+  +orderId: ObjectId
+  +amount: Number
+  +method: String
+  +status: String
+  +createdAt: Date
+}
+
+class RefreshToken {
+  +ObjectId _id
+  +userId: ObjectId
+  +token: String
+  +replacedByToken: String
+  +expiresAt: Date
+  +revokedAt: Date
+  +revokedByIp: String
+  +reason: String
+  +createdByIp: String
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+'Notes' as N
+N : Cart.items -> product references `Product`
+N : Order.products -> productId references `Product`
+N : RefreshToken -> token rotation and TTL
+
+' Associations '
+User "1" -- "0..*" Order : places
+User "1" -- "0..1" Cart : owns
+User "1" -- "0..*" RefreshToken : issues
+User "1" -- "0..*" Payment : makes
+
+Cart "1" o-- "0..*" Product : contains [items]
+Order "1" o-- "0..*" Product : includes [products]
+Payment "1" -- "1" Order : for
+Payment "1" -- "1" User : by
+
+@enduml

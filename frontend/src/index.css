@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Base styles */
+@layer base {
+  /* Prevent flash of unstyled content */
+  /* :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  } */
+
+  /* Body styles with smooth transitions */
+  body {
+    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Ensure smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Main Layout Styles */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.input {
+  @apply w-full rounded-lg border
+  border-gray-300 dark:border-gray-700
+  bg-white dark:bg-gray-800
+  text-gray-900 dark:text-gray-100
+  placeholder-gray-400 dark:placeholder-gray-500
+  focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white
+  px-6 py-2 rounded-lg font-semibold transition;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-900
+  dark:bg-gray-700 dark:text-gray-100;
+}
+
+.btn-outline {
+  @apply border border-indigo-500 text-indigo-600
+  hover:bg-indigo-600 hover:text-white
+  px-4 py-1.5 rounded-lg transition;
+}
+
+.btn-danger {
+  @apply border border-red-500 text-red-500
+  hover:bg-red-500 hover:text-white
+  px-4 py-1.5 rounded-lg transition;
+}
+
+.auth-input {
+  @apply w-full px-4 py-3 rounded-xl bg-white/90 dark:bg-gray-700/80
+  border border-gray-300 dark:border-gray-600
+  focus:outline-none focus:ring-2 focus:ring-indigo-500
+  dark:text-white placeholder-gray-400;
+}
