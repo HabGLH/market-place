@@ -29,7 +29,7 @@ const HomePage = () => {
       try {
         const queryParams = { page: currentPage, limit };
         const data = await getProducts(queryParams);
-        setProducts(data.items);
+        setProducts(Array.isArray(data.items) ? data.items : []);
         setTotalPages(data.pages);
       } catch {
         setError("Failed to load products.");
@@ -60,7 +60,8 @@ const HomePage = () => {
       alert("Added to cart!");
     } catch (err) {
       alert(
-        "Failed to add to cart: " + (err.response?.data?.message || err.message)
+        "Failed to add to cart: " +
+          (err.response?.data?.message || err.message),
       );
     } finally {
       setAddingId(null);

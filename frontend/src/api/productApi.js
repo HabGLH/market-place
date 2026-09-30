@@ -18,7 +18,19 @@ export const getProducts = async (queryParams) => {
   const response = await axiosInstance.get("/products", {
     params: queryParams,
   });
-  return response.data; // list of products
+  const data = response.data;
+  if (Array.isArray(data)) {
+    return { items: data, page: 1, pages: 1, total: data.length };
+  }
+
+  const items = data?.items ?? data?.products ?? data?.data;
+  return {
+    ...data,
+    items: Array.isArray(items) ? items : [],
+    page: data?.page ?? 1,
+    pages: data?.pages ?? data?.totalPages ?? data?.last_page ?? 1,
+    total: data?.total ?? data?.totalCount ?? data?.count ?? items?.length ?? 0,
+  };
 };
 
 export const getProductById = async (id) => {
