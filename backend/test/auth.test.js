@@ -25,11 +25,13 @@ describe("Auth API", () => {
   });
 
   it("should reject invalid registration payloads", async () => {
-    const res = await request(app).post("/api/auth/register").send({
-      ...userData,
-      email: "not-an-email",
-      password: "short",
-    });
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({
+        ...userData,
+        email: "not-an-email",
+        password: "short",
+      });
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toMatch(/Invalid request/);

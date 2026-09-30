@@ -29,7 +29,7 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 productSchema.index({ category: 1, isActive: 1 });

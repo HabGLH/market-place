@@ -21,18 +21,18 @@ const logger = winston.createLogger({
     ? [new winston.transports.Console()]
     : isDevelopment
       ? [
-        new winston.transports.File({
-          filename: "logs/error.log",
-          level: "error",
-        }),
-        new winston.transports.File({ filename: "logs/request.log" }),
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            consoleFormat,
-          ),
-        }),
-      ]
+          new winston.transports.File({
+            filename: "logs/error.log",
+            level: "error",
+          }),
+          new winston.transports.File({ filename: "logs/request.log" }),
+          new winston.transports.Console({
+            format: winston.format.combine(
+              winston.format.colorize(),
+              consoleFormat,
+            ),
+          }),
+        ]
       : [new winston.transports.Console({ format: consoleFormat })],
 });
 
