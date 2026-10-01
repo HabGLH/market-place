@@ -9,14 +9,7 @@ import { createOrder } from "../../api/orderApi";
 import Loader from "../../components/Loader";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useNavigate } from "react-router-dom";
-
-// Format currency helper
-const formatPrice = (price) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(price);
-};
+import { formatPrice } from "../../utils/formatters";
 
 const CartPage = () => {
   const [cart, setCart] = useState(null);
@@ -53,7 +46,7 @@ const CartPage = () => {
     try {
       await updateCartItem(itemId, newQuantity);
       await fetchCart();
-    } catch (err) {
+    } catch {
       alert("Failed to update quantity.");
     } finally {
       setUpdatingItems((prev) => {
@@ -69,7 +62,7 @@ const CartPage = () => {
     try {
       await removeCartItem(itemId);
       await fetchCart();
-    } catch (err) {
+    } catch {
       alert("Failed to remove item.");
       setUpdatingItems((prev) => {
         const newSet = new Set(prev);
@@ -86,7 +79,7 @@ const CartPage = () => {
     try {
       await clearCart();
       setCart({ items: [], totalPrice: 0 });
-    } catch (err) {
+    } catch {
       alert("Failed to clear cart.");
     } finally {
       setProcessing(false);
@@ -111,9 +104,10 @@ const CartPage = () => {
   if (error) return <ErrorMessage message={error} />;
 
   const items = cart?.items || [];
-  const subtotal = cart?.totalPrice || 0;
-  const shipping = subtotal > 50 ? 0 : subtotal > 0 ? 5.99 : 0;
-  const total = subtotal + shipping;
+  const subtotal = cart?.subtotal ?? cart?.totalPrice ?? 0;
+  const shipping = cart?.shippingFee ?? 0;
+  const vat = cart?.vat ?? 0;
+  const total = cart?.totalAmount ?? subtotal + shipping + vat;
 
   // Empty cart state
   if (items.length === 0) {
@@ -379,11 +373,10 @@ const CartPage = () => {
                   </span>
                 </div>
 
-                {subtotal > 0 && subtotal < 50 && (
-                  <p className="text-sm text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
-                    Add {formatPrice(50 - subtotal)} more for free shipping!
-                  </p>
-                )}
+                <div className="flex justify-between text-gray-700 dark:text-gray-300">
+                  <span>VAT</span>
+                  <span className="font-semibold">{formatPrice(vat)}</span>
+                </div>
 
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white">

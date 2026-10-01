@@ -7,6 +7,10 @@ export const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email,
   password: z.string().min(8).max(128),
+  phone: z
+    .string()
+    .regex(/^\+251[79]\d{8}$/)
+    .optional(),
 });
 
 export const loginSchema = z.object({
@@ -19,6 +23,10 @@ export const updateMeSchema = z.object({
   email: email.optional(),
   password: z.string().min(8).max(128).optional(),
   currentPassword: z.string().min(1).max(128).optional(),
+  phone: z
+    .string()
+    .regex(/^\+251[79]\d{8}$/)
+    .optional(),
 });
 
 export const addToCartSchema = z.object({
@@ -72,19 +80,6 @@ export const productIdParamsSchema = z.object({ id: objectId });
 export const cartProductIdParamsSchema = z.object({ productId: objectId });
 export const stockSchema = z.object({ stock: z.coerce.number().int().min(0) });
 
-export const createOrderSchema = z.object({
-  paymentMethod: z.string().trim().min(1).max(60).optional(),
-});
-
-export const updateOrderStatusSchema = z.object({
-  status: z.enum(["Pending", "Shipped", "Delivered", "Cancelled"]),
-});
-
-export const orderIdParamsSchema = z.object({ id: objectId });
-export const orderListQuerySchema = z.object({
-  status: z.enum(["Pending", "Shipped", "Delivered", "Cancelled"]).optional(),
-});
-
 const shippingAddressSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   phone: z
@@ -99,7 +94,46 @@ const shippingAddressSchema = z.object({
   landmark: z.string().trim().max(200).optional(),
 });
 
+export const createOrderSchema = z.object({
+  paymentMethod: z.literal("cod"),
+  shippingAddress: shippingAddressSchema,
+});
+
+export const updateOrderStatusSchema = z.object({
+  status: z.enum([
+    "Pending",
+    "Processing",
+    "Shipped",
+    "Delivered",
+    "Cancelled",
+    "Failed",
+  ]),
+});
+
+export const orderIdParamsSchema = z.object({ id: objectId });
+
 export const paymentCheckoutSchema = z.object({
   shippingAddress: shippingAddressSchema,
-  paymentMethod: z.enum(["chapa", "cod"]),
+  paymentMethod: z.literal("chapa"),
+});
+
+export const paymentStatusParamsSchema = z.object({
+  txRef: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z\d_-]+$/i),
+});
+
+export const orderListQuerySchema = z.object({
+  status: z
+    .enum([
+      "Pending",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+      "Failed",
+    ])
+    .optional(),
 });

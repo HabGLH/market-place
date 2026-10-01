@@ -3,23 +3,7 @@ import { getMyOrders, cancelOrder } from "../../api/orderApi";
 import Loader from "../../components/Loader";
 import ErrorMessage from "../../components/ErrorMessage";
 import { useNavigate } from "react-router-dom";
-
-// Format currency helper
-const formatPrice = (price) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(price);
-};
-
-// Format date helper
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
+import { formatDate, formatPrice } from "../../utils/formatters";
 
 // Status badge component
 const StatusBadge = ({ status }) => {
@@ -85,7 +69,7 @@ const OrdersPage = () => {
     } catch (err) {
       alert(
         "Failed to cancel order: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
       );
     } finally {
       setCancellingId(null);

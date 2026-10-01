@@ -46,7 +46,20 @@ describe("Admin Dashboard API", () => {
     await Order.create({
       userId: adminRes.body.user.id,
       totalAmount: 100,
-      paymentMethod: "Cash",
+      subtotal: 100,
+      shippingFee: 0,
+      vat: 0,
+      currency: "ETB",
+      paymentMethod: "cod",
+      paymentStatus: "Paid",
+      txRef: "admin-dashboard-test",
+      shippingAddress: {
+        fullName: "Test Admin",
+        phone: "+251911123456",
+        city: "Addis Ababa",
+        subCity: "Bole",
+        addressLine: "Bole Road",
+      },
       products: [],
     });
   });

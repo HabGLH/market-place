@@ -2,6 +2,7 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import asyncHandler from "express-async-handler";
 import AppError from "../utils/AppError.js";
+import { calculateOrderTotals } from "../services/pricing.js";
 
 const recalculateTotalPrice = async (cart) => {
   await cart.populate("items.product");
@@ -18,9 +19,21 @@ export const getCart = asyncHandler(async (req, res) => {
     "items.product",
   );
   if (!cart) {
-    return res.json({ items: [], totalPrice: 0 });
+    return res.json({
+      items: [],
+      totalPrice: 0,
+      ...calculateOrderTotals(0),
+    });
   }
-  res.json(cart);
+  const subtotal = cart.items.reduce(
+    (total, item) => total + (item.product?.price ?? 0) * item.quantity,
+    0,
+  );
+  res.json({
+    ...cart.toObject(),
+    totalPrice: subtotal,
+    ...calculateOrderTotals(subtotal),
+  });
 });
 
 // Add product to cart

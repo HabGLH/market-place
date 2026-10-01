@@ -14,15 +14,24 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
     amount: { type: Number, required: true, min: 0 },
-    method: { type: String, required: true },
+    currency: { type: String, enum: ["ETB"], default: "ETB", required: true },
+    method: { type: String },
+    provider: { type: String, enum: ["chapa", "cod"], required: true },
+    txRef: { type: String, required: true, unique: true, index: true },
+    providerRef: { type: String },
+    rawPayload: { type: mongoose.Schema.Types.Mixed },
+    processingAt: { type: Date, default: null },
     status: {
       type: String,
-      enum: ["Success", "Failed"],
+      enum: ["Pending", "Success", "Failed", "Refunded"],
       required: true,
+      default: "Pending",
     },
   },
-  { timestamps: { createdAt: "createdAt" } }
+  { timestamps: { createdAt: "createdAt" } },
 );
+
+paymentSchema.index({ status: 1, createdAt: 1 });
 
 const Payment = mongoose.model("Payment", paymentSchema);
 export default Payment;

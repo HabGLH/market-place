@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+      match: /^\+251[79]\d{8}$/,
+    },
     password: {
       type: String,
       required: true,
@@ -37,7 +42,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
-  }
+  },
 );
 
 const User = mongoose.model("User", userSchema);

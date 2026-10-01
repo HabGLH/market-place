@@ -41,6 +41,7 @@ export const updateMe = asyncHandler(async (req, res) => {
 
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
+    if (req.body.phone !== undefined) user.phone = req.body.phone;
 
     if (req.body.password) {
       const hashedPassword = await bcrypt.hash(req.body.password, SALT_ROUNDS);
@@ -52,6 +53,7 @@ export const updateMe = asyncHandler(async (req, res) => {
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
+      phone: updatedUser.phone,
     });
   } else {
     throw new AppError("User not found", 404);

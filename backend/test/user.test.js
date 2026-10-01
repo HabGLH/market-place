@@ -121,7 +121,20 @@ describe("User API", () => {
         },
       ],
       totalAmount: 25,
-      paymentMethod: "Cash",
+      subtotal: 25,
+      shippingFee: 0,
+      vat: 3.75,
+      currency: "ETB",
+      paymentMethod: "cod",
+      paymentStatus: "Paid",
+      txRef: "user-orders-test",
+      shippingAddress: {
+        fullName: "Test User",
+        phone: "+251911123456",
+        city: "Addis Ababa",
+        subCity: "Bole",
+        addressLine: "Bole Road",
+      },
     });
 
     const res = await request(app)

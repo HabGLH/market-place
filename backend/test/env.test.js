@@ -6,6 +6,8 @@ const validEnv = {
   CLIENT_URL: "http://localhost:5173",
   CHAPA_SECRET_KEY: "test-chapa-secret",
   CHAPA_WEBHOOK_SECRET: "test-webhook-secret",
+  SHIPPING_FEE_ETB: "100",
+  FREE_SHIPPING_THRESHOLD_ETB: "5000",
 };
 
 describe("environment validation", () => {

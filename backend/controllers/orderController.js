@@ -1,46 +1,8 @@
 import Order from "../models/Order.js";
-import Cart from "../models/Cart.js";
+import Payment from "../models/Payment.js";
 import asyncHandler from "express-async-handler"; // Middleware to handle async errors
 import AppError from "../utils/AppError.js";
-
-// Create order from cart
-export const createOrder = asyncHandler(async (req, res) => {
-  const cart = await Cart.findOne({ userId: req.user.id }).populate(
-    "items.product"
-  );
-
-  if (!cart || cart.items.length === 0) {
-    throw new AppError("Cart is empty", 400);
-  }
-
-  // Calculate total price
-  let totalAmount = 0;
-  const orderProducts = cart.items.map((item) => {
-    totalAmount += item.product.price * item.quantity;
-    return {
-      productId: item.product._id,
-      quantity: item.quantity,
-      price: item.product.price,
-      totalPrice: item.product.price * item.quantity,
-    };
-  });
-
-  // Create order
-  const order = new Order({
-    userId: req.user.id,
-    products: orderProducts,
-    totalAmount,
-    paymentMethod: req.body.paymentMethod || "Credit Card",
-  });
-
-  const createdOrder = await order.save();
-
-  // Clear cart
-  cart.items = [];
-  await cart.save();
-
-  res.status(201).json(createdOrder);
-});
+import { restoreStock } from "../services/orderService.js";
 
 //get user orders
 export const getUserOrders = asyncHandler(async (req, res) => {
@@ -51,7 +13,7 @@ export const getUserOrders = asyncHandler(async (req, res) => {
 //get order by id
 export const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate(
-    "products.productId"
+    "products.productId",
   );
   if (order && order.userId.toString() === req.user.id) {
     res.json(order);
@@ -62,18 +24,34 @@ export const getOrderById = asyncHandler(async (req, res) => {
 
 //cancel order
 export const cancelOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (order && order.userId.toString() === req.user.id) {
-    if (order.orderStatus === "Pending") {
-      order.orderStatus = "Cancelled";
-      await order.save();
-      res.json({ message: "Order cancelled" });
-    } else {
-      throw new AppError("Cannot cancel order at this stage", 400);
-    }
-  } else {
-    throw new AppError("Order not found", 404);
+  const order = await Order.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      userId: req.user.id,
+      paymentMethod: "cod",
+      paymentStatus: "Pending",
+      orderStatus: "Processing",
+    },
+    { $set: { paymentStatus: "Failed", orderStatus: "Cancelled" } },
+    { new: true },
+  );
+
+  if (!order) {
+    const existingOrder = await Order.findOne({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+    if (!existingOrder) throw new AppError("Order not found", 404);
+    throw new AppError("Cannot cancel order at this stage", 400);
   }
+
+  await restoreStock(order.products);
+  await Payment.updateOne(
+    { txRef: order.txRef, status: "Pending" },
+    { $set: { status: "Failed", rawPayload: { reason: "Order cancelled" } } },
+  );
+
+  res.json({ message: "Order cancelled" });
 });
 
 //get all orders (admin)

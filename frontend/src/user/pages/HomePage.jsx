@@ -115,8 +115,8 @@ const HomePage = () => {
             {[
               {
                 icon: "🚚",
-                title: "Free Shipping",
-                desc: "On orders over $50",
+                title: "Nationwide Delivery",
+                desc: "Shipping fees shown at checkout",
               },
               { icon: "🔒", title: "Secure Payment", desc: "100% protected" },
               { icon: "⚡", title: "Fast Delivery", desc: "2-3 business days" },

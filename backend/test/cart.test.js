@@ -81,4 +81,24 @@ describe("Cart API", () => {
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toMatch(/Invalid request/);
   });
+
+  it("should return ETB subtotal, shipping, VAT, and total", async () => {
+    await request(app)
+      .post("/api/cart/add")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ productId, quantity: 2 });
+
+    const res = await request(app)
+      .get("/api/cart")
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      subtotal: 20,
+      shippingFee: 100,
+      vat: 3,
+      totalAmount: 123,
+      currency: "ETB",
+    });
+  });
 });

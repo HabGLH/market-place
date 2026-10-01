@@ -1,6 +1,22 @@
 //Order model
 import mongoose from "mongoose";
 
+const shippingAddressSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    phone: {
+      type: String,
+      required: true,
+      match: /^\+251[79]\d{8}$/,
+    },
+    city: { type: String, required: true, trim: true },
+    subCity: { type: String, required: true, trim: true },
+    addressLine: { type: String, required: true, trim: true },
+    landmark: { type: String, trim: true },
+  },
+  { _id: false },
+);
+
 const orderSchema = new mongoose.Schema(
   {
     userId: {
@@ -21,15 +37,36 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true, min: 0 },
-    paymentMethod: { type: String, required: true },
+    subtotal: { type: Number, required: true, min: 0 },
+    shippingFee: { type: Number, required: true, min: 0 },
+    vat: { type: Number, required: true, min: 0 },
+    currency: { type: String, enum: ["ETB"], default: "ETB", required: true },
+    paymentMethod: { type: String, enum: ["chapa", "cod"], required: true },
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
+      default: "Pending",
+      required: true,
+    },
+    txRef: { type: String, required: true, unique: true, index: true },
+    shippingAddress: { type: shippingAddressSchema, required: true },
     orderStatus: {
       type: String,
-      enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      enum: [
+        "Pending",
+        "Processing",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+        "Failed",
+      ],
       default: "Pending",
     },
   },
-  { timestamps: { createdAt: "createdAt" } }
+  { timestamps: { createdAt: "createdAt" } },
 );
+
+orderSchema.index({ userId: 1, createdAt: -1 });
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

@@ -1,12 +1,12 @@
 import express from "express";
 import {
-  createOrder,
   getUserOrders,
   getOrderById,
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
 } from "../controllers/orderController.js";
+import { createCodOrder } from "../controllers/paymentController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 import validateRequest from "../middleware/validateRequest.js";
@@ -25,7 +25,7 @@ router.post(
   "/",
   authenticateToken,
   validateRequest({ body: createOrderSchema }),
-  createOrder,
+  createCodOrder,
 );
 router.get("/my", authenticateToken, getUserOrders);
 router.get(

@@ -6,6 +6,14 @@ import Cart from "../models/Cart.js";
 import mongoose from "mongoose";
 
 describe("Order API", () => {
+  const shippingAddress = {
+    fullName: "Order User",
+    phone: "+251911123456",
+    city: "Addis Ababa",
+    subCity: "Bole",
+    addressLine: "Bole Road, House 12",
+    landmark: "Near the airport",
+  };
   console.log("Registered Models in Order Test:", mongoose.modelNames());
   let userToken, adminToken, userId;
   let productId;
@@ -55,10 +63,20 @@ describe("Order API", () => {
     const res = await request(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${userToken}`)
-      .send({ paymentMethod: "Credit Card" });
+      .send({ paymentMethod: "cod", shippingAddress, totalAmount: 1 });
     expect(res.statusCode).toBe(201);
-    expect(res.body.totalAmount).toBe(100);
-    expect(res.body.orderStatus).toBe("Pending");
+    expect(res.body.totalAmount).toBe(215);
+    expect(res.body).toMatchObject({
+      subtotal: 100,
+      shippingFee: 100,
+      vat: 15,
+      currency: "ETB",
+      paymentStatus: "Pending",
+      orderStatus: "Processing",
+      paymentMethod: "cod",
+    });
+    const updatedProduct = await Product.findById(productId);
+    expect(updatedProduct.stock).toBe(8);
   });
 
   it("should get user orders", async () => {
@@ -66,7 +84,7 @@ describe("Order API", () => {
     await request(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${userToken}`)
-      .send({ paymentMethod: "Credit Card" });
+      .send({ paymentMethod: "cod", shippingAddress });
 
     const res = await request(app)
       .get("/api/orders/my")
@@ -79,7 +97,7 @@ describe("Order API", () => {
     await request(app)
       .post("/api/orders")
       .set("Authorization", `Bearer ${userToken}`)
-      .send({ paymentMethod: "Credit Card" });
+      .send({ paymentMethod: "cod", shippingAddress });
 
     const res = await request(app)
       .get("/api/orders")
@@ -96,5 +114,19 @@ describe("Order API", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toMatch(/Invalid request/);
+  });
+
+  it("should restore COD stock when an unpaid order is cancelled", async () => {
+    const created = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ paymentMethod: "cod", shippingAddress });
+
+    const res = await request(app)
+      .put(`/api/orders/${created.body._id}/cancel`)
+      .set("Authorization", `Bearer ${userToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect((await Product.findById(productId)).stock).toBe(10);
   });
 });

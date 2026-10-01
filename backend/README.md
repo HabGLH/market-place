@@ -123,3 +123,27 @@ npm test
 - `test/cart.test.js`: Shopping cart operations.
 - `test/user.test.js`: User profile and admin management.
 - `test/admin.test.js`: Dashboard analytics.
+
+## 6. Ethiopian checkout and Chapa
+
+Copy `.env.example` to `.env`, then set `MONGO_URL`, `ACCESS_TOKEN_SECRET`,
+`CLIENT_URL`, `CHAPA_SECRET_KEY`, `CHAPA_WEBHOOK_SECRET`,
+`SHIPPING_FEE_ETB`, and `FREE_SHIPPING_THRESHOLD_ETB`. Payment amounts are
+calculated by the server in ETB, with 15% VAT and configurable shipping.
+
+The Chapa endpoint is `POST /api/payments/checkout`; it returns a checkout URL.
+Cash on delivery uses `POST /api/orders` with `paymentMethod: "cod"` and a
+shipping address.
+
+In the Chapa dashboard, configure the webhook URL as
+`https://<your-api-host>/api/payments/webhook` and set a random webhook secret
+matching `CHAPA_WEBHOOK_SECRET`. Use a Chapa TEST secret key in
+`CHAPA_SECRET_KEY`. Chapa redirects the customer back to the frontend and sends
+a signed webhook. The server verifies the signature and fetches the transaction
+from Chapa before marking an order paid; a browser return is not proof of
+payment.
+
+For local sandbox webhooks, expose the backend on an HTTPS tunnel and register
+that public URL plus `/api/payments/webhook` in the Chapa dashboard. Backend
+tests can use the installed MongoDB binary with
+`MONGOMS_SYSTEM_BINARY=/usr/bin/mongod npm test -- --runInBand`.

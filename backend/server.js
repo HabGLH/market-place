@@ -15,6 +15,11 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import paymentRoutes, {
+  paymentProvider,
+  webhookHandler,
+} from "./routes/paymentRoutes.js";
+import { startPaymentExpiryJob } from "./services/payments/paymentExpiryJob.js";
 import AppError from "./utils/AppError.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import requestLogger from "./middleware/requestLogger.js";
@@ -36,6 +41,11 @@ const express5MongoSanitize = (req, res, next) => {
 // Middleware
 app.use(helmet());
 app.use(requestLogger); // Log requests early
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json", limit: "10kb" }),
+  webhookHandler,
+);
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(express5MongoSanitize);
@@ -48,6 +58,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/payments", paymentRoutes);
 
 app.get("/", (req, res) => {
   res.send("API in point of tech brand site");
@@ -75,8 +86,12 @@ if (process.env.NODE_ENV !== "test" && isMainModule) {
   validateEnv();
 
   let server;
+  let paymentExpiryTask;
+  let isShuttingDown = false;
   const shutdown = (signal) => {
+    isShuttingDown = true;
     logger.info(`Received ${signal}; shutting down`);
+    paymentExpiryTask?.stop();
     const closeServer = () => {
       mongoose
         .disconnect()
@@ -100,6 +115,8 @@ if (process.env.NODE_ENV !== "test" && isMainModule) {
 
   connectDB()
     .then(() => {
+      if (isShuttingDown) return mongoose.disconnect();
+      paymentExpiryTask = startPaymentExpiryJob(paymentProvider);
       server = app.listen(PORT, () =>
         logger.info(`Server listening on port ${PORT}`),
       );

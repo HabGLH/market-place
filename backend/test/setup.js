@@ -7,6 +7,8 @@ process.env.ACCESS_TOKEN_SECRET ||=
 process.env.CLIENT_URL ||= "http://localhost:5173";
 process.env.CHAPA_SECRET_KEY ||= "test-chapa-secret";
 process.env.CHAPA_WEBHOOK_SECRET ||= "test-webhook-secret";
+process.env.SHIPPING_FEE_ETB ||= "100";
+process.env.FREE_SHIPPING_THRESHOLD_ETB ||= "5000";
 
 // Force model registration
 import "../models/User.js";

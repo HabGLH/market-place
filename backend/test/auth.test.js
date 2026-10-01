@@ -37,6 +37,15 @@ describe("Auth API", () => {
     expect(res.body.message).toMatch(/Invalid request/);
   });
 
+  it("should reject phone numbers outside Ethiopian mobile format", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ ...userData, phone: "0911123456" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toMatch(/Invalid request/);
+  });
+
   it("should login with correct credentials", async () => {
     await request(app).post("/api/auth/register").send(userData);
 

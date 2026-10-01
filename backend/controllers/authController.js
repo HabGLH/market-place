@@ -29,7 +29,7 @@ const generateAccessToken = (user) => {
 
 // Register controller
 export const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
   const ipAddress = req.ip;
 
   const existingUser = await User.findOne({ email });
@@ -42,6 +42,7 @@ export const register = asyncHandler(async (req, res) => {
     name,
     email,
     password: hashedPassword,
+    phone,
   });
 
   // Generate tokens
@@ -66,6 +67,7 @@ export const register = asyncHandler(async (req, res) => {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
+      phone: newUser.phone,
       role: newUser.role,
     },
     accessToken,
