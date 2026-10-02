@@ -96,7 +96,19 @@ backend/
 └── package.json        # Dependencies
 ```
 
-## 4. Error Handling
+## 4. Admin account setup
+
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the backend `.env` file, then run:
+
+```bash
+npm run seed:admin
+```
+
+The command creates an active admin when the email is new. If an account with
+that email already exists, it promotes the account without changing its
+password. Sign in at the frontend `/login` page and open `/admin`.
+
+## 5. Error Handling
 
 The application uses a standardized `AppError` class.
 
@@ -104,7 +116,7 @@ The application uses a standardized `AppError` class.
 - **System Errors**: Caught by the global error handler (500 Internal Server Error).
 - **Logging**: All errors are logged to `logs/error.log`.
 
-## 5. Testing
+## 6. Testing
 
 The project uses **Jest** and **Supertest** for integration testing, with **MongoMemoryServer** for database isolation.
 
@@ -124,7 +136,7 @@ npm test
 - `test/user.test.js`: User profile and admin management.
 - `test/admin.test.js`: Dashboard analytics.
 
-## 6. Ethiopian checkout and Chapa
+## 7. Ethiopian checkout and Chapa
 
 Copy `.env.example` to `.env`, then set `MONGO_URL`, `ACCESS_TOKEN_SECRET`,
 `CLIENT_URL`, `CHAPA_SECRET_KEY`, `CHAPA_WEBHOOK_SECRET`,

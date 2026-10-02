@@ -19,7 +19,7 @@ const ProfilePage = () => {
         const data = await getProfile();
         setProfile(data);
         setFormData({ name: data.name, email: data.email });
-      } catch (err) {
+      } catch {
         setError("Failed to load profile.");
       } finally {
         setLoading(false);
@@ -41,7 +41,7 @@ const ProfilePage = () => {
       setProfile(updated);
       setIsEditing(false);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to update profile.");
     } finally {
       setUpdating(false);

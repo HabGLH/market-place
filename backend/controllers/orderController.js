@@ -59,7 +59,10 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   const status = req.query.status;
   const filter = status ? { orderStatus: status } : {};
 
-  const orders = await Order.find(filter).populate("products.productId");
+  const orders = await Order.find(filter)
+    .populate("products.productId")
+    .populate("userId", "name email")
+    .sort({ createdAt: -1 });
   res.json(orders);
 });
 

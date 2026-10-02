@@ -38,7 +38,7 @@ const AuthProvider = ({ children }) => {
             : null;
 
         setUser(normalizedUser);
-      } catch (error) {
+      } catch {
         // Not logged in - this is fine
         setUser(null);
       } finally {

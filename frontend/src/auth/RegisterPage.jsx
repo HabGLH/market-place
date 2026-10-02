@@ -40,7 +40,7 @@ const RegisterPage = () => {
       navigate("/");
     } catch (err) {
       setError(
-        err.response?.data?.message || "Registration failed. Please try again."
+        err.response?.data?.message || "Registration failed. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -48,120 +48,129 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 -z-10" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-violet-900 px-4 py-12">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.35),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(192,132,252,0.3),_transparent_30%)]" />
 
-      {/* Glassmorphism Card */}
-      <div className="relative w-full max-w-md backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-white/20 dark:border-gray-700 rounded-3xl shadow-xl p-8">
-        {/* Header */}
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">
-          Create Account ✨
-        </h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
-          Join TechBrand and start shopping
-        </p>
-
-        {/* Error Message */}
-        {error && <ErrorMessage message={error} />}
-
-        {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="name"
-            >
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Your full name"
-            />
+      <div className="relative w-full max-w-lg">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm">
+            <span className="text-3xl">✨</span>
           </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-200">
+            Create account
+          </p>
+        </div>
 
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="email"
+        <div className="rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-2xl shadow-indigo-950/40 backdrop-blur-xl sm:p-8">
+          <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-white">
+            Join TechBrand
+          </h2>
+          <p className="mb-6 text-center text-sm text-indigo-100/80">
+            Start your premium shopping experience
+          </p>
+
+          {error && (
+            <div className="mb-4">
+              <ErrorMessage message={error} />
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="name"
+              >
+                Full name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="Your full name"
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="email"
+              >
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="password"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="Create a strong password"
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="confirmPassword"
+              >
+                Confirm password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="Repeat your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-3.5 text-base font-bold text-white shadow-lg shadow-indigo-900/40 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Your email address"
-            />
-          </div>
+              {isSubmitting ? "Registering..." : "Register"}
+            </button>
+          </form>
 
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="password"
+          <p className="mt-6 text-center text-sm text-indigo-100/80">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-white underline-offset-4 hover:underline"
             >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Enter a strong password"
-            />
-          </div>
-
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="confirmPassword"
-            >
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Repeat your password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:opacity-90 transition"
-          >
-            {isSubmitting ? "Registering..." : "Register"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-gray-600 dark:text-gray-300 text-sm">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-indigo-600 hover:underline"
-          >
-            Login here
-          </Link>
-        </p>
+              Sign in here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

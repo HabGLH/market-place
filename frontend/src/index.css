@@ -2,30 +2,40 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Base styles */
 @layer base {
-  /* Prevent flash of unstyled content */
-  /* :root {
-    color-scheme: light;
-  }
-
-  :root.dark {
-    color-scheme: dark;
-  } */
-
-  /* Body styles with smooth transitions */
-  body {
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  /* Ensure smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    background-image:
+      radial-gradient(circle at top, rgba(99, 102, 241, 0.08), transparent 35%),
+      radial-gradient(
+        circle at bottom right,
+        rgba(168, 85, 247, 0.08),
+        transparent 30%
+      );
+    background-attachment: fixed;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  * {
+    @apply border-slate-200 dark:border-slate-800;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.2);
+  }
 }
 
-/* Main Layout Styles */
 #root {
   min-height: 100vh;
   display: flex;
@@ -36,71 +46,63 @@ main {
   flex: 1;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 5px;
+  background: #94a3b8;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #64748b;
 }
 
-/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #0f172a;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #475569;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #64748b;
 }
 
 .input {
-  @apply w-full rounded-lg border
-  border-gray-300 dark:border-gray-700
-  bg-white dark:bg-gray-800
-  text-gray-900 dark:text-gray-100
-  placeholder-gray-400 dark:placeholder-gray-500
-  focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  @apply w-full rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500;
 }
 
 .btn-primary {
-  @apply bg-indigo-600 hover:bg-indigo-700 text-white
-  px-6 py-2 rounded-lg font-semibold transition;
+  @apply rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition hover:bg-indigo-700;
 }
 
 .btn-secondary {
-  @apply bg-gray-200 text-gray-900
-  dark:bg-gray-700 dark:text-gray-100;
+  @apply rounded-xl bg-slate-200 px-6 py-3 font-semibold text-slate-900 transition hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600;
 }
 
 .btn-outline {
-  @apply border border-indigo-500 text-indigo-600
-  hover:bg-indigo-600 hover:text-white
-  px-4 py-1.5 rounded-lg transition;
+  @apply rounded-xl border border-indigo-500 px-5 py-2.5 font-semibold text-indigo-600 transition hover:bg-indigo-600 hover:text-white;
 }
 
 .btn-danger {
-  @apply border border-red-500 text-red-500
-  hover:bg-red-500 hover:text-white
-  px-4 py-1.5 rounded-lg transition;
+  @apply rounded-xl border border-red-500 px-5 py-2.5 font-semibold text-red-500 transition hover:bg-red-500 hover:text-white;
 }
 
 .auth-input {
-  @apply w-full px-4 py-3 rounded-xl bg-white/90 dark:bg-gray-700/80
-  border border-gray-300 dark:border-gray-600
-  focus:outline-none focus:ring-2 focus:ring-indigo-500
-  dark:text-white placeholder-gray-400;
+  @apply w-full rounded-xl border border-slate-300 bg-white/90 px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800/80 dark:text-white dark:placeholder-slate-500;
+}
+
+.soft-card {
+  @apply rounded-3xl border border-slate-200 bg-white/80 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/80;
+}
+
+.section-shell {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }

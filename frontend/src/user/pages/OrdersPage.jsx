@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { getMyOrders, cancelOrder } from "../../api/orderApi";
 import Loader from "../../components/Loader";
 import ErrorMessage from "../../components/ErrorMessage";
-import { useNavigate } from "react-router-dom";
+import useFeedback from "../../hooks/useFeedback";
 import { formatDate, formatPrice } from "../../utils/formatters";
 
 // Status badge component
@@ -32,52 +34,44 @@ const StatusBadge = ({ status }) => {
 };
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [cancellingId, setCancellingId] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-
-  const fetchOrders = async () => {
-    try {
-      const data = await getMyOrders();
-      // Sort by newest first
-      const sortedOrders = Array.isArray(data)
-        ? data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        : [];
-      setOrders(sortedOrders);
-    } catch (err) {
-      setError(err.message || "Failed to fetch orders.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  const { notify, confirm } = useFeedback();
+  const ordersQuery = useQuery({
+    queryKey: ["orders"],
+    queryFn: getMyOrders,
+  });
+  const orders = Array.isArray(ordersQuery.data)
+    ? [...ordersQuery.data].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      )
+    : [];
+  const cancelMutation = useMutation({
+    mutationFn: cancelOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      notify("Order cancelled");
+    },
+    onError: (error) =>
+      notify(
+        error.response?.data?.message || "Failed to cancel order",
+        "error",
+      ),
+  });
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-
-    setCancellingId(orderId);
-    try {
-      await cancelOrder(orderId);
-      await fetchOrders();
-      alert("Order cancelled successfully!");
-    } catch (err) {
-      alert(
-        "Failed to cancel order: " +
-          (err.response?.data?.message || err.message),
-      );
-    } finally {
-      setCancellingId(null);
-    }
+    const accepted = await confirm({
+      title: "Cancel this order?",
+      message: "The order will be cancelled and its reserved stock returned.",
+      confirmLabel: "Cancel order",
+    });
+    if (accepted) cancelMutation.mutate(orderId);
   };
 
-  if (loading) return <Loader />;
-  if (error) return <ErrorMessage message={error} />;
+  if (ordersQuery.isPending) return <Loader />;
+  if (ordersQuery.isError)
+    return <ErrorMessage message="Failed to fetch orders." />;
 
   // Empty state
   if (orders.length === 0) {
@@ -138,8 +132,17 @@ const OrdersPage = () => {
         {/* Orders List */}
         <div className="space-y-6">
           {orders.map((order) => {
+            const orderStatus = order.orderStatus || "Pending";
             const isExpanded = expandedOrder === order._id;
-            const isCancelling = cancellingId === order._id;
+            const isCancelling =
+              cancelMutation.isPending &&
+              cancelMutation.variables === order._id;
+            const productItems = Array.isArray(order.products)
+              ? order.products
+              : Array.isArray(order.items)
+                ? order.items
+                : [];
+            const totalAmount = order.totalAmount ?? order.totalPrice ?? 0;
 
             return (
               <div
@@ -154,7 +157,7 @@ const OrdersPage = () => {
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                           Order #{order._id?.substring(0, 12) || "..."}
                         </h3>
-                        <StatusBadge status={order.orderStatus} />
+                        <StatusBadge status={orderStatus} />
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Placed on{" "}
@@ -169,7 +172,7 @@ const OrdersPage = () => {
                         Total Amount
                       </p>
                       <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {formatPrice(order.totalPrice)}
+                        {formatPrice(totalAmount)}
                       </p>
                     </div>
                   </div>
@@ -186,7 +189,7 @@ const OrdersPage = () => {
                       className="flex items-center justify-between w-full text-left"
                     >
                       <h4 className="text-md font-semibold text-gray-900 dark:text-white">
-                        Order Items ({order.items?.length || 0})
+                        Order Items ({productItems.length})
                       </h4>
                       <svg
                         className={`w-5 h-5 text-gray-500 transition-transform ${
@@ -208,57 +211,65 @@ const OrdersPage = () => {
                     {/* Expanded Items List */}
                     {isExpanded && (
                       <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
-                        {order.items?.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                          >
-                            <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 rounded-lg flex items-center justify-center">
-                              {Array.isArray(item.product?.images) &&
-                              item.product.images.length > 0 ? (
-                                <img
-                                  src={item.product.images[0]}
-                                  alt={item.product.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              ) : (
-                                <svg
-                                  className="w-8 h-8 text-gray-400"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1.5}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        {productItems.map((item, idx) => {
+                          const product = item.product || item.productId || {};
+                          const unitPrice = item.price ?? item.unitPrice ?? 0;
+                          const itemQuantity = item.quantity ?? 1;
+                          const lineTotal =
+                            item.totalPrice ?? unitPrice * itemQuantity;
+
+                          return (
+                            <div
+                              key={product._id || idx}
+                              className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                            >
+                              <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                                {Array.isArray(product.images) &&
+                                product.images.length > 0 ? (
+                                  <img
+                                    src={product.images[0]}
+                                    alt={product.name || "Product"}
+                                    className="w-full h-full object-cover rounded-lg"
                                   />
-                                </svg>
-                              )}
+                                ) : (
+                                  <svg
+                                    className="w-8 h-8 text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={1.5}
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900 dark:text-white">
+                                  {product.name || "Product"}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Quantity: {itemQuantity}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-gray-900 dark:text-white">
+                                  {formatPrice(lineTotal)}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900 dark:text-white">
-                                {item.product?.name || "Product"}
-                              </p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Quantity: {item.quantity}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold text-gray-900 dark:text-white">
-                                {formatPrice(item.price * item.quantity)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
 
                   {/* Order Actions */}
                   <div className="flex flex-wrap gap-3 mt-6">
-                    {order.orderStatus === "Pending" && (
+                    {orderStatus === "Pending" && (
                       <button
                         onClick={() => handleCancelOrder(order._id)}
                         disabled={isCancelling}
@@ -309,8 +320,8 @@ const OrdersPage = () => {
                       </button>
                     )}
 
-                    {(order.orderStatus === "Delivered" ||
-                      order.orderStatus === "Cancelled") && (
+                    {(orderStatus === "Delivered" ||
+                      orderStatus === "Cancelled") && (
                       <button
                         onClick={() => navigate("/")}
                         className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-all flex items-center gap-2"
@@ -332,7 +343,7 @@ const OrdersPage = () => {
                       </button>
                     )}
 
-                    {order.orderStatus === "Shipped" && (
+                    {orderStatus === "Shipped" && (
                       <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg">
                         <svg
                           className="w-5 h-5"

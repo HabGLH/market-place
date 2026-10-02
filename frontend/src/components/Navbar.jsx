@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import useAuth from "../auth/useAuth";
 import { useTheme } from "../context/ThemeContext";
 import { getCart } from "../api/cartApi";
@@ -11,19 +12,35 @@ const Navbar = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const [scrolled, setScrolled] = useState(
+    () => typeof window !== "undefined" && window.scrollY > 50,
+  );
 
   const profileRef = useRef(null);
   const mobileMenuRef = useRef(null);
+
+  const cartQuery = useQuery({
+    queryKey: ["cart", user?._id],
+    queryFn: getCart,
+    enabled: Boolean(user),
+    retry: false,
+    select: (cart) => {
+      const items = cart?.items || [];
+      return (
+        items.reduce((sum, item) => sum + (item?.quantity || 0), 0) ||
+        items.length ||
+        0
+      );
+    },
+  });
+
+  const cartCount = user ? (cartQuery.data ?? 0) : 0;
 
   // Handle scroll effect for navbar backdrop
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-    // Set initial state
-    setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -45,36 +62,6 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Fetch cart count from API
-  useEffect(() => {
-    if (user) {
-      getCart()
-        .then((cart) => {
-          // Assuming cart structure has an items array
-          // Adjust based on your actual API response structure if needed
-          const count =
-            cart?.items?.reduce(
-              (acc, item) => acc + (item?.quantity || 0),
-              0
-            ) ||
-            cart?.items?.length ||
-            0;
-          setCartCount(count);
-        })
-        .catch((err) => {
-          setCartCount(0);
-        });
-    } else {
-      setCartCount(0);
-    }
-  }, [user]);
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMenuOpen(false);
-    setProfileOpen(false);
-  }, [navigate]);
 
   const handleLogout = async () => {
     await logout();

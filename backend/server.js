@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
 import mongoose from "mongoose";
+import path from "path";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import authRoutes from "./routes/authRoutes.js";
@@ -15,6 +16,7 @@ import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes, {
   paymentProvider,
   webhookHandler,
@@ -24,6 +26,8 @@ import AppError from "./utils/AppError.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import requestLogger from "./middleware/requestLogger.js";
 import logger from "./utils/logger.js";
+
+const __dirname = path.resolve();
 
 const app = express();
 app.set("trust proxy", 1);
@@ -39,7 +43,7 @@ const express5MongoSanitize = (req, res, next) => {
 };
 
 // Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false })); // allow static image fetching
 app.use(requestLogger); // Log requests early
 app.post(
   "/api/payments/webhook",
@@ -51,6 +55,9 @@ app.use(cookieParser());
 app.use(express5MongoSanitize);
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
+// Serve static files
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+
 // auth routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -58,6 +65,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 app.use("/api/payments", paymentRoutes);
 
 app.get("/", (req, res) => {

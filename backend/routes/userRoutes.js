@@ -1,4 +1,3 @@
-//userRout.js
 import express from "express";
 import {
   getMe,
@@ -7,6 +6,7 @@ import {
   getUserById,
   disableUser,
   enableUser,
+  updateUserRole,
   getUserOrders,
 } from "../controllers/userController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
@@ -30,7 +30,9 @@ router
   .get(authenticateToken, roleMiddleware(), getUserById) // Admin: get user details by ID
   .put(authenticateToken, roleMiddleware(), disableUser); // Admin: block user
 
+router.put("/:id/disable", authenticateToken, roleMiddleware(), disableUser);
 router.put("/:id/enable", authenticateToken, roleMiddleware(), enableUser);
+router.put("/:id/role", authenticateToken, roleMiddleware(), updateUserRole);
 router.get("/:id/orders", authenticateToken, roleMiddleware(), getUserOrders);
 
 export default router;

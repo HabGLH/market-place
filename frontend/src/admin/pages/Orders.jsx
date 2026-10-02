@@ -1,21 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getAllOrders, updateOrderStatus } from "../../api/orderApi";
 import Pagination from "../../components/Pagination";
 import Loader from "../../components/Loader";
 import ErrorMessage from "../../components/ErrorMessage";
+import useFeedback from "../../hooks/useFeedback";
 import { formatPrice } from "../../utils/formatters";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { notify, confirm } = useFeedback();
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getAllOrders({ page: currentPage, limit });
@@ -25,7 +27,7 @@ const Orders = () => {
         setTotalPages(
           data.totalPages ||
             Math.ceil((data.totalCount || data.count) / limit) ||
-            1
+            1,
         );
       } else if (Array.isArray(data)) {
         setOrders(data);
@@ -34,28 +36,38 @@ const Orders = () => {
         setOrders([]);
         setTotalPages(1);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to load orders.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage]);
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage]);
+  }, [fetchOrders]);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
   const handleStatusChange = async (id, newStatus) => {
-    if (!window.confirm(`Change status to ${newStatus}?`)) return;
+    const accepted = await confirm({
+      title: "Update order status?",
+      message: `Change this order to ${newStatus}?`,
+      confirmLabel: "Update",
+    });
+    if (!accepted) return;
+
     try {
       await updateOrderStatus(id, newStatus);
       fetchOrders();
+      notify("Order status updated");
     } catch (err) {
-      alert("Failed to update status.");
+      notify(
+        err.response?.data?.message || "Failed to update status.",
+        "error",
+      );
     }
   };
 
@@ -95,13 +107,13 @@ const Orders = () => {
                 <p>
                   User:{" "}
                   <span className="font-medium">
-                    {order.user?.name || "Unknown"}
+                    {order.userId?.name || "Unknown"}
                   </span>
                 </p>
                 <p>
                   Total:{" "}
                   <span className="font-semibold">
-                    {formatPrice(order.totalPrice)}
+                    {formatPrice(order.totalAmount)}
                   </span>
                 </p>
               </div>
@@ -114,8 +126,8 @@ const Orders = () => {
                     order.orderStatus === "Delivered"
                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                       : order.orderStatus === "Cancelled"
-                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                   }`}
                 >
                   {order.orderStatus}

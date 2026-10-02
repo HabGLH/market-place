@@ -26,7 +26,6 @@ const getInitialTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(getInitialTheme);
-  const [mounted, setMounted] = useState(false);
 
   // Apply theme on mount and when theme changes
   useEffect(() => {
@@ -40,9 +39,6 @@ export const ThemeProvider = ({ children }) => {
 
     // Save to localStorage
     localStorage.setItem("theme", theme);
-
-    // Mark as mounted
-    setMounted(true);
   }, [theme]);
 
   // Listen for system theme changes
@@ -91,6 +87,7 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {

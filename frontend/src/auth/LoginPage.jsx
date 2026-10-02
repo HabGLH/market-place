@@ -26,7 +26,7 @@ const LoginPage = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Login failed. Please check your credentials."
+          "Login failed. Please check your credentials.",
       );
     } finally {
       setIsSubmitting(false);
@@ -34,80 +34,89 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 -z-10" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-violet-900 px-4 py-12">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.35),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.28),_transparent_30%)]" />
 
-      {/* Glassmorphism Card */}
-      <div className="relative w-full max-w-md backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-white/20 dark:border-gray-700 rounded-3xl shadow-xl p-8">
-        {/* Header */}
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">
-          Welcome Back 👋
-        </h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
-          Login to continue shopping
-        </p>
-
-        {/* Error Message */}
-        {error && <ErrorMessage message={error} />}
-
-        {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="email"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Enter your email"
-            />
+      <div className="relative w-full max-w-md">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm">
+            <span className="text-3xl">🛒</span>
           </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-200">
+            Welcome back
+          </p>
+        </div>
 
-          <div>
-            <label
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              htmlFor="password"
+        <div className="rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-2xl shadow-indigo-950/40 backdrop-blur-xl sm:p-8">
+          <h2 className="mb-2 text-center text-3xl font-black tracking-tight text-white">
+            Sign in to TechBrand
+          </h2>
+          <p className="mb-6 text-center text-sm text-indigo-100/80">
+            Continue shopping with your account
+          </p>
+
+          {error && (
+            <div className="mb-4">
+              <ErrorMessage message={error} />
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="email"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-indigo-100"
+                htmlFor="password"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/20 px-4 py-3 text-white placeholder:text-indigo-100/50 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-400/50"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-3.5 text-base font-bold text-white shadow-lg shadow-indigo-900/40 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Enter your password"
-            />
-          </div>
+              {isSubmitting ? "Logging in..." : "Login"}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:opacity-90 transition"
-          >
-            {isSubmitting ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-gray-600 dark:text-gray-300 text-sm">
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="font-semibold text-indigo-600 hover:underline"
-          >
-            Register here
-          </Link>
-        </p>
+          <p className="mt-6 text-center text-sm text-indigo-100/80">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="font-semibold text-white underline-offset-4 hover:underline"
+            >
+              Create one now
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -1,88 +1,88 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth";
-
-// Layouts (We might need to create these if they don't exist, or just use placeholders for now)
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-// Auth Pages
-import LoginPage from "../auth/LoginPage";
-import RegisterPage from "../auth/RegisterPage";
+const LoginPage = lazy(() => import("../auth/LoginPage"));
+const RegisterPage = lazy(() => import("../auth/RegisterPage"));
+const HomePage = lazy(() => import("../user/pages/HomePage"));
+const ProductsPage = lazy(() => import("../user/pages/ProductsPage"));
+const ProductDetailPage = lazy(() => import("../user/pages/ProductDetailPage"));
+const CartPage = lazy(() => import("../user/pages/CartPage"));
+const CheckoutPage = lazy(() => import("../user/pages/CheckoutPage"));
+const OrdersPage = lazy(() => import("../user/pages/OrdersPage"));
+const OrderDetailPage = lazy(() => import("../user/pages/OrderDetailPage"));
+const PaymentReturnPage = lazy(() => import("../user/pages/PaymentReturnPage"));
+const ProfilePage = lazy(() => import("../user/pages/ProfilePage"));
+const StaticPage = lazy(() => import("../user/pages/StaticPage"));
+const Dashboard = lazy(() => import("../admin/pages/Dashboard"));
+const AdminProducts = lazy(() => import("../admin/pages/Products"));
+const AdminOrders = lazy(() => import("../admin/pages/Orders"));
+const AdminUsers = lazy(() => import("../admin/pages/Users"));
+const AdminCategories = lazy(() => import("../admin/pages/Categories"));
+const AdminInventory = lazy(() => import("../admin/pages/Inventory"));
+const AdminActivityLogs = lazy(() => import("../admin/pages/ActivityLogs"));
+const AdminLayout = lazy(() => import("../admin/AdminLayout"));
+const NotFoundPage = lazy(() => import("../components/NotFoundPage"));
 
-// User Pages
-import HomePage from "../user/pages/HomePage";
-import CartPage from "../user/pages/CartPage";
-import OrdersPage from "../user/pages/OrdersPage";
-import ProfilePage from "../user/pages/ProfilePage";
-
-// Admin Pages
-import Dashboard from "../admin/pages/Dashboard";
-import AdminProducts from "../admin/pages/Products";
-import AdminOrders from "../admin/pages/Orders";
-import AdminUsers from "../admin/pages/Users";
-import AdminLayout from "../admin/AdminLayout";
-
-// Placeholder wrapper for standard layout
-const MainLayout = ({ children }) => (
+const MainLayout = () => (
   <>
     <Navbar />
-    <main style={{ minHeight: "80vh", padding: "20px" }}>{children}</main>
+    <Outlet />
     <Footer />
   </>
 );
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-
-      {/* Public Pages with Main Layout */}
-      <Route
-        element={
-          <>
-            <Navbar />
-            <Outlet />
-            <Footer />
-          </>
-        }
-      >
-        <Route path="/" element={<HomePage />} />
-        {/* Product Details etc */}
-      </Route>
-
-      {/* Protected User Routes */}
-      <Route element={<RequireAuth allowedRoles={["user", "admin"]} />}>
-        <Route
-          element={
-            <>
-              <Navbar />
-              <Outlet />
-              <Footer />
-            </>
-          }
-        >
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          {/* Profile etc */}
+    <Suspense
+      fallback={
+        <div className="px-4 py-24 text-center" role="status">
+          Loading…
+        </div>
+      }
+    >
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/about" element={<StaticPage />} />
+          <Route path="/contact" element={<StaticPage />} />
+          <Route path="/shipping-returns" element={<StaticPage />} />
+          <Route path="/privacy" element={<StaticPage />} />
+          <Route path="/terms" element={<StaticPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Route>
-      </Route>
 
-      {/* Admin Routes */}
-      <Route element={<RequireAuth allowedRoles={["admin"]} />}>
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="users" element={<AdminUsers />} />
+        <Route element={<RequireAuth allowedRoles={["user", "admin"]} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment/return" element={<PaymentReturnPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Catch all */}
-      <Route path="*" element={<div>404 Not Found</div>} />
-    </Routes>
+        <Route element={<RequireAuth allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="inventory" element={<AdminInventory />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="logs" element={<AdminActivityLogs />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 };
 
