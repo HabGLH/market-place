@@ -6,7 +6,10 @@ import { restoreStock } from "../services/orderService.js";
 
 //get user orders
 export const getUserOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ userId: req.user.id });
+  const orders = await Order.find({ userId: req.user.id }).populate(
+    "products.productId",
+    "name images",
+  );
   res.json(orders);
 });
 

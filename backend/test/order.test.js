@@ -91,6 +91,10 @@ describe("Order API", () => {
       .set("Authorization", `Bearer ${userToken}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0].products[0].productId).toMatchObject({
+      name: "Order Product",
+      images: [],
+    });
   });
 
   it("should allow admin to get all orders", async () => {
