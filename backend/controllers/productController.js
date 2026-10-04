@@ -5,6 +5,8 @@ import Product from "../models/Product.js";
 import asyncHandler from "express-async-handler"; // Middleware to handle async errors
 import AppError from "../utils/AppError.js";
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
@@ -12,7 +14,14 @@ export const getAllProducts = asyncHandler(async (req, res) => {
   const { page, limit, q, category, sort: sortOption } = req.query;
   const filter = { isActive: true };
   if (category) filter.category = category;
-  if (q) filter.$text = { $search: q };
+  const searchTerm = q?.trim();
+  const searchPattern = searchTerm ? escapeRegex(searchTerm) : null;
+  if (searchPattern) {
+    filter.$or = [
+      { name: { $regex: searchPattern, $options: "i" } },
+      { description: { $regex: searchPattern, $options: "i" } },
+    ];
+  }
 
   const sort = {
     newest: { createdAt: -1 },
@@ -22,12 +31,63 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     name_asc: { name: 1 },
   }[sortOption];
 
+  const productsQuery = searchPattern
+    ? Product.aggregate([
+        { $match: filter },
+        {
+          $addFields: {
+            searchRank: {
+              $switch: {
+                branches: [
+                  {
+                    case: {
+                      $regexMatch: {
+                        input: "$name",
+                        regex: `^${searchPattern}$`,
+                        options: "i",
+                      },
+                    },
+                    then: 0,
+                  },
+                  {
+                    case: {
+                      $regexMatch: {
+                        input: "$name",
+                        regex: `^${searchPattern}`,
+                        options: "i",
+                      },
+                    },
+                    then: 1,
+                  },
+                  {
+                    case: {
+                      $regexMatch: {
+                        input: "$name",
+                        regex: searchPattern,
+                        options: "i",
+                      },
+                    },
+                    then: 2,
+                  },
+                ],
+                default: 3,
+              },
+            },
+          },
+        },
+        { $sort: { searchRank: 1, ...sort } },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        { $project: { searchRank: 0 } },
+      ])
+    : Product.find(filter)
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
   const [items, total] = await Promise.all([
-    Product.find(filter)
-      .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
+    productsQuery,
     Product.countDocuments(filter),
   ]);
 

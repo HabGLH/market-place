@@ -105,13 +105,42 @@ describe("Product API", () => {
     ]);
 
     const res = await request(app).get(
-      "/api/products?q=keyboard&category=Electronics&sort=price_asc&page=1&limit=1",
+      "/api/products?q=KEYB&category=Electronics&sort=price_asc&page=1&limit=1",
     );
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toMatchObject({ page: 1, pages: 2, total: 2 });
     expect(res.body.items).toHaveLength(1);
     expect(res.body.items[0].name).toBe("Wireless Keyboard B");
+  });
+
+  it("should rank exact product-name matches ahead of partial matches", async () => {
+    await Product.insertMany([
+      {
+        name: "Wireless Keyboard Cover",
+        description: "Protective case",
+        price: 100,
+        category: "Accessories",
+        stock: 4,
+      },
+      {
+        name: "Wireless Keyboard",
+        description: "Mechanical keyboard",
+        price: 200,
+        category: "Electronics",
+        stock: 3,
+      },
+    ]);
+
+    const res = await request(app).get(
+      "/api/products?q=wireless%20keyboard&page=1&limit=12",
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.items.map(({ name }) => name)).toEqual([
+      "Wireless Keyboard",
+      "Wireless Keyboard Cover",
+    ]);
   });
 
   it("should reject invalid product listing options", async () => {

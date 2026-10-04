@@ -11,6 +11,7 @@ import { formatPrice } from "../../utils/formatters";
 import { useNavigate, Link } from "react-router-dom";
 import useFeedback from "../../hooks/useFeedback";
 import CategoryCard from "../../components/CategoryCard";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 
 /* ─── Animated counter hook ─── */
 const useCounter = (end, duration = 2000) => {
@@ -55,6 +56,7 @@ const StarRating = ({ rating = 0, size = "sm" }) => {
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebouncedValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [heroProductIndex, setHeroProductIndex] = useState(0);
@@ -79,14 +81,19 @@ const HomePage = () => {
   const productsQuery = useQuery({
     queryKey: [
       "products",
-      { page: currentPage, limit, category: selectedCategory, q: searchQuery },
+      {
+        page: currentPage,
+        limit,
+        category: selectedCategory,
+        q: debouncedSearchQuery,
+      },
     ],
     queryFn: () =>
       getProducts({
         page: currentPage,
         limit,
         category: selectedCategory || undefined,
-        q: searchQuery || undefined,
+        q: debouncedSearchQuery || undefined,
       }),
   });
 
@@ -244,7 +251,10 @@ const HomePage = () => {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     placeholder="Search products..."
                     className="w-full rounded-2xl border border-white/20 bg-white/10 py-3.5 pl-12 pr-4 text-white placeholder-indigo-200/60 backdrop-blur-lg transition focus:border-white/40 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />

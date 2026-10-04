@@ -7,6 +7,7 @@ import { getCategories } from "../../api/adminApi";
 import Pagination from "../../components/Pagination";
 import useAuth from "../../auth/useAuth";
 import useFeedback from "../../hooks/useFeedback";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { formatPrice } from "../../utils/formatters";
 
 const StarRating = ({ rating = 0 }) => (
@@ -49,6 +50,7 @@ const ProductsPage = () => {
   const selectedCategory = searchParams.get("category") || "";
 
   const [searchInput, setSearchInput] = useState(query);
+  const debouncedSearchInput = useDebouncedValue(searchInput);
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
 
@@ -60,6 +62,24 @@ const ProductsPage = () => {
   useEffect(() => {
     document.title = "TechBrand | All Products";
   }, []);
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  useEffect(() => {
+    const trimmedQuery = debouncedSearchInput.trim();
+    if (trimmedQuery === query) return undefined;
+
+    const params = new URLSearchParams(searchParams);
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery);
+    } else {
+      params.delete("q");
+    }
+    setPage(1);
+    setSearchParams(params, { replace: true });
+  }, [debouncedSearchInput, query, searchParams, setSearchParams]);
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -147,6 +167,11 @@ const ProductsPage = () => {
             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               Marketplace Catalog
             </h1>
+            {query && (
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Results for <span className="font-semibold">&ldquo;{query}&rdquo;</span>
+              </p>
+            )}
           </div>
           <span className="rounded-full bg-indigo-50 dark:bg-indigo-900/40 px-4 py-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 w-fit">
             {total} {total === 1 ? "Product" : "Products"} Available
@@ -157,23 +182,27 @@ const ProductsPage = () => {
         <div className="soft-card mb-8 p-4 sm:p-5">
           <form
             onSubmit={handleSearchSubmit}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end"
           >
             {/* Search Input */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <div className="lg:col-span-2">
+              <label
+                htmlFor="product-search"
+                className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5"
+              >
                 Search
               </label>
               <div className="relative">
                 <input
+                  id="product-search"
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Product name or keywords..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-xl border border-indigo-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
                 />
                 <svg
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                  className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-500 dark:text-indigo-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -185,7 +214,39 @@ const ProductsPage = () => {
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setPage(1);
+                      const params = new URLSearchParams(searchParams);
+                      params.delete("q");
+                      setSearchParams(params);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                    aria-label="Clear search"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Results update as you type.
+              </p>
             </div>
 
             {/* Category Dropdown */}
@@ -234,7 +295,7 @@ const ProductsPage = () => {
                 type="submit"
                 className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 transition"
               >
-                Apply
+                Search
               </button>
               {(query || selectedCategory) && (
                 <button
@@ -251,6 +312,16 @@ const ProductsPage = () => {
         </div>
 
         {/* Loading Skeletons */}
+        {productsQuery.isFetching && !productsQuery.isPending && (
+          <p
+            className="my-4 text-center text-sm font-medium text-indigo-600 dark:text-indigo-400"
+            role="status"
+            aria-live="polite"
+          >
+            Updating results…
+          </p>
+        )}
+
         {productsQuery.isPending && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 my-8">
             {[...Array(8)].map((_, i) => (
@@ -279,7 +350,10 @@ const ProductsPage = () => {
         )}
 
         {/* Empty State */}
-        {!productsQuery.isPending && !productsQuery.isError && items.length === 0 && (
+        {!productsQuery.isPending &&
+          !productsQuery.isFetching &&
+          !productsQuery.isError &&
+          items.length === 0 && (
           <div className="soft-card p-12 text-center my-8">
             <div className="text-5xl mb-4">🔍</div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
