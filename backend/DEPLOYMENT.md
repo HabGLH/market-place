@@ -1,45 +1,79 @@
-# Deploying to Render
+# Deploying Backend to Render
 
-This backend is configured for deployment on Render. Follow these steps:
+This backend is configured for deployment on [Render.com](https://render.com).
 
-## Prerequisites
+---
 
-1.  **MongoDB Database**: Render does not provide a managed MongoDB. You should use a provider like [MongoDB Atlas](https://www.mongodb.com/atlas).
-    - Get your Connection String (URI). It looks like `mongodb+srv://<username>:<password>@cluster0.mongodb.net/dbname`.
-2.  **Git Repository**: Ensure this code is pushed to a GitHub or GitLab repository.
+## ⚠️ Common Deployment Failures & Solutions
 
-## Deployment Steps
+### 1. Root Directory Not Set
+Because this repository is a monorepo containing both `backend` and `frontend`, Render must know to execute commands inside the `backend` folder.
+* **Fix**: Set **Root Directory** to `backend` in Render Web Service settings (or use `render.yaml` Blueprint).
 
-### Option 1: Using Blueprints (Recommended)
+### 2. Missing Environment Variables
+On startup, `backend/config/env.js` validates that all required environment variables are set. If any variable is missing, the application throws an error and crashes immediately on start.
+* **Fix**: Ensure **all** required environment variables are added in the Render dashboard.
 
-This method uses the `render.yaml` file I created to automatically configure the service.
+### 3. MongoDB Atlas IP Whitelist (0.0.0.0/0)
+Render services use dynamic IP addresses. If MongoDB Atlas blocks requests outside specified IPs, the server startup times out while trying to connect to MongoDB.
+* **Fix**: In MongoDB Atlas, go to **Network Access** -> Add IP Address -> Select **Allow Access from Anywhere** (`0.0.0.0/0`).
 
-1.  Log in to your [Render Dashboard](https://dashboard.render.com/).
-2.  Click **New +** and select **Blueprint**.
-3.  Connect your GitHub/GitLab repository.
-4.  Render will detect the `render.yaml` file.
-5.  It will prompt you for the Environment Variables defined in the YAML:
-    - `MONGO_URL`: Paste your MongoDB Connection String.
-    - `ACCESS_TOKEN_SECRET`: Enter a long random string for security.
-6.  Click **Apply**. Render will deploy your service.
+---
 
-### Option 2: Manual Setup
+## 🛠️ Deployment Steps
 
-If you prefer to configure manually:
+### Option A: Using Render Blueprints (Recommended)
 
-1.  Create a **New Web Service**.
-2.  Connect your repository.
-3.  Settings:
-    - **Runtime**: Node
-    - **Build Command**: `npm install`
-    - **Start Command**: `npm start`
-4.  **Environment Variables**:
-    - `NODE_ENV`: `production`
-    - `MONGO_URL`: (Your MongoDB Connection String)
-    - `ACCESS_TOKEN_SECRET`: (Your secret)
-    - `ACCESS_TOKEN_LIFE`: `15m` (Optional)
+1. Push the code to GitHub/GitLab.
+2. Log into [Render Dashboard](https://dashboard.render.com/).
+3. Click **New +** -> **Blueprint**.
+4. Connect your repository.
+5. Render will automatically detect `render.yaml` and configure the service.
+6. Provide values for prompt environment variables (`MONGO_URL`, `ACCESS_TOKEN_SECRET`, `CLIENT_URL`, `CHAPA_SECRET_KEY`, `CHAPA_WEBHOOK_SECRET`).
+7. Click **Apply**.
 
-## Post-Deployment
+---
 
-- Render will provide a URL (e.g., `https://ecommerce-backend.onrender.com`).
-- Update your Frontend application to point to this new API URL.
+### Option B: Manual Web Service Setup
+
+1. Log into [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** -> **Web Service**.
+3. Connect your repository.
+4. Fill in the basic configuration:
+   * **Name**: `market-place-backend`
+   * **Region**: Choose closest to target users
+   * **Branch**: `main` (or active branch)
+   * **Root Directory**: `backend` *(CRITICAL)*
+   * **Runtime**: `Node`
+   * **Build Command**: `npm install`
+   * **Start Command**: `npm start`
+   * **Health Check Path**: `/health`
+
+5. Under **Environment Variables**, add the following:
+
+| Key | Example / Description | Required |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | Yes |
+| `NODE_VERSION` | `20` | Yes |
+| `MONGO_URL` | `mongodb+srv://user:pass@cluster.mongodb.net/dbname` | Yes |
+| `ACCESS_TOKEN_SECRET` | Long random secret string (e.g. 32+ chars) | Yes |
+| `ACCESS_TOKEN_LIFE` | `15m` | Yes |
+| `CLIENT_URL` | `https://your-frontend.onrender.com` or Vercel URL | Yes |
+| `CHAPA_SECRET_KEY` | `CHASECK_TEST-xxxx...` | Yes |
+| `CHAPA_WEBHOOK_SECRET` | `your-webhook-secret` | Yes |
+| `SHIPPING_FEE_ETB` | `100` | Yes |
+| `FREE_SHIPPING_THRESHOLD_ETB` | `5000` | Yes |
+
+6. Click **Create Web Service**.
+
+---
+
+## 🔍 Verification & Health Check
+
+- Once deployed, test the health check endpoint:
+  ```
+  GET https://<your-render-app>.onrender.com/health
+  ```
+  Expected Response: `{"status":"OK","timestamp":"..."}`
+
+- Check the **Logs** tab in Render dashboard if any issues arise.
