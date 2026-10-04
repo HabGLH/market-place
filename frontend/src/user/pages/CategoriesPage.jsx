@@ -4,6 +4,7 @@ import { getCategories } from "../../api/adminApi";
 import { getProducts } from "../../api/productApi";
 import ErrorMessage from "../../components/ErrorMessage";
 import Loader from "../../components/Loader";
+import CategoryCard from "../../components/CategoryCard";
 import { useEffect } from "react";
 
 const categoryIcons = {
@@ -24,17 +25,6 @@ const categoryIcons = {
   networking: "🌐",
   software: "📀",
 };
-
-const categoryGradients = [
-  "from-indigo-500 to-cyan-500",
-  "from-violet-500 to-pink-500",
-  "from-amber-500 to-orange-500",
-  "from-emerald-500 to-teal-500",
-  "from-rose-500 to-red-500",
-  "from-sky-500 to-blue-500",
-  "from-fuchsia-500 to-purple-500",
-  "from-lime-500 to-green-500",
-];
 
 const CategoriesPage = () => {
   useEffect(() => {
@@ -142,47 +132,15 @@ const CategoriesPage = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {categoriesList.map((category, index) => {
-              const gradient =
-                categoryGradients[index % categoryGradients.length];
-
-              return (
-                <Link
-                  key={category.id || category.slug}
-                  to={`/categories/${encodeURIComponent(category.slug)}`}
-                  className="soft-card group overflow-hidden p-6 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-2xl shadow-lg transition-transform duration-300 group-hover:scale-110`}
-                      >
-                        {category.icon}
-                      </div>
-                      <span className="rounded-full bg-indigo-50 dark:bg-indigo-900/40 px-3 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                        {category.productCount}{" "}
-                        {category.productCount === 1 ? "item" : "items"}
-                      </span>
-                    </div>
-
-                    <h2 className="mt-6 text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {category.name}
-                    </h2>
-                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                      {category.description}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                    <span>Shop category</span>
-                    <span className="transition-transform group-hover:translate-x-1">
-                      →
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {categoriesList.map((category, index) => (
+              <CategoryCard
+                key={category.id || category.slug}
+                category={category}
+                index={index}
+                to={`/categories/${encodeURIComponent(category.slug)}`}
+              />
+            ))}
           </div>
         )}
       </div>
