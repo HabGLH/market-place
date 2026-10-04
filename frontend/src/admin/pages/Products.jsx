@@ -78,7 +78,7 @@ const Products = () => {
         setNewProduct((prev) => ({ ...prev, image: imageUrl }));
         notify("Image uploaded successfully");
       } catch (err) {
-        notify("Failed to upload image", "error");
+        notify(err?.response?.data?.message || "Failed to upload image", "error");
       } finally {
         setUploadingImage(false);
       }

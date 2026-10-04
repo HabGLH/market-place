@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getProducts } from "../../api/productApi";
 import { getCategories } from "../../api/adminApi";
@@ -12,59 +12,25 @@ import { useNavigate, Link } from "react-router-dom";
 import useFeedback from "../../hooks/useFeedback";
 
 /* ─── Animated counter hook ─── */
-const useCounter = (end, duration = 2000, startOnView = true) => {
+const useCounter = (end, duration = 2000) => {
   const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const started = useRef(false);
 
   useEffect(() => {
-    if (!startOnView) {
-      setCount(end);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started.current) {
-          started.current = true;
-          let start = 0;
-          const step = end / (duration / 16);
-          const timer = setInterval(() => {
-            start += step;
-            if (start >= end) {
-              setCount(end);
-              clearInterval(timer);
-            } else {
-              setCount(Math.floor(start));
-            }
-          }, 16);
-        }
-      },
-      { threshold: 0.3 },
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [end, duration, startOnView]);
+    let start = 0;
+    const step = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [end, duration]);
 
-  return { count, ref };
-};
-
-/* ─── Fade-in on scroll hook ─── */
-const useFadeIn = () => {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setVisible(true);
-      },
-      { threshold: 0.1 },
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, visible };
+  return count;
 };
 
 /* ─── Category icon mapping ─── */
@@ -128,6 +94,10 @@ const HomePage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useFeedback();
+
+  const [sevenDaysAgoThreshold] = useState(
+    () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  );
 
   // ─── Dynamic data fetching ───
   const categoriesQuery = useQuery({
@@ -221,15 +191,9 @@ const HomePage = () => {
   };
 
   // ─── Animated stats ───
-  const stat1 = useCounter(totalProducts || 120, 1800);
-  const stat2 = useCounter(2500, 2000);
-  const stat3 = useCounter(99, 1500);
-
-  // ─── Fade-in refs ───
-  const categoriesFade = useFadeIn();
-  const productsFade = useFadeIn();
-  const statsFade = useFadeIn();
-  const ctaFade = useFadeIn();
+  const stat1Count = useCounter(totalProducts || 120, 1800);
+  const stat2Count = useCounter(2500, 2000);
+  const stat3Count = useCounter(99, 1500);
 
   if (productsQuery.isPending && !productsQuery.data) return <Loader />;
   if (productsQuery.isError)
@@ -456,34 +420,24 @@ const HomePage = () => {
       {/* ═══════════════════════════════════════════
           STATS SECTION — Animated counters
       ═══════════════════════════════════════════ */}
-      <section
-        ref={statsFade.ref}
-        className={`border-b border-slate-200 bg-white/50 py-12 backdrop-blur dark:border-slate-800 dark:bg-slate-900/50 transition-all duration-700 ${
-          statsFade.visible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-8 opacity-0"
-        }`}
-      >
+      <section className="border-b border-slate-200 bg-white/50 py-12 backdrop-blur dark:border-slate-800 dark:bg-slate-900/50">
         <div className="section-shell">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {[
               {
-                value: stat1.count,
-                ref: stat1.ref,
+                value: stat1Count,
                 suffix: "+",
                 label: "Products",
                 icon: "📦",
               },
               {
-                value: stat2.count,
-                ref: stat2.ref,
+                value: stat2Count,
                 suffix: "+",
                 label: "Happy customers",
                 icon: "😊",
               },
               {
-                value: stat3.count,
-                ref: stat3.ref,
+                value: stat3Count,
                 suffix: "%",
                 label: "Satisfaction rate",
                 icon: "⭐",
@@ -496,7 +450,6 @@ const HomePage = () => {
             ].map((stat) => (
               <div
                 key={stat.label}
-                ref={stat.ref}
                 className="text-center"
               >
                 <div className="text-3xl">{stat.icon}</div>
@@ -516,14 +469,7 @@ const HomePage = () => {
       {/* ═══════════════════════════════════════════
           CATEGORIES — Dynamic from API
       ═══════════════════════════════════════════ */}
-      <section
-        ref={categoriesFade.ref}
-        className={`section-shell py-16 transition-all duration-700 ${
-          categoriesFade.visible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-8 opacity-0"
-        }`}
-      >
+      <section className="section-shell py-16">
         <div className="mb-10 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
             Shop by category
@@ -620,12 +566,7 @@ const HomePage = () => {
       ═══════════════════════════════════════════ */}
       <section
         id="products"
-        ref={productsFade.ref}
-        className={`section-shell py-16 sm:py-20 transition-all duration-700 ${
-          productsFade.visible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-8 opacity-0"
-        }`}
+        className="section-shell py-16 sm:py-20"
       >
         <div className="mb-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div>
@@ -763,8 +704,7 @@ const HomePage = () => {
                       </span>
                     )}
                     {product.createdAt &&
-                      new Date(product.createdAt) >
-                        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+                      new Date(product.createdAt) > sevenDaysAgoThreshold && (
                         <span className="rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow">
                           New
                         </span>
@@ -959,14 +899,7 @@ const HomePage = () => {
           CTA — Create Account / Start Shopping
       ═══════════════════════════════════════════ */}
       {!user && (
-        <section
-          ref={ctaFade.ref}
-          className={`relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 py-20 dark:from-indigo-900 dark:to-violet-900 transition-all duration-700 ${
-            ctaFade.visible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-8 opacity-0"
-          }`}
-        >
+        <section className="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 py-20 dark:from-indigo-900 dark:to-violet-900">
           {/* Background decoration */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-white/20 blur-3xl" />
