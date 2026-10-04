@@ -27,8 +27,7 @@ router.route("/").get(authenticateToken, roleMiddleware(), getAllUsers); // Admi
 
 router
   .route("/:id")
-  .get(authenticateToken, roleMiddleware(), getUserById) // Admin: get user details by ID
-  .put(authenticateToken, roleMiddleware(), disableUser); // Admin: block user
+  .get(authenticateToken, roleMiddleware(), getUserById); // Admin: get user details by ID
 
 router.put("/:id/disable", authenticateToken, roleMiddleware(), disableUser);
 router.put("/:id/enable", authenticateToken, roleMiddleware(), enableUser);

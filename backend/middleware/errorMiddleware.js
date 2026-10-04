@@ -12,11 +12,15 @@ const errorHandler = (err, req, res, next) => {
     logger.error(err.stack);
   }
 
-  // Send response
+  // Send response — hide internal error details in production
+  const isProduction = process.env.NODE_ENV === "production";
   res.status(err.statusCode).json({
     status: err.status,
-    message: err.message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    message:
+      isProduction && !err.isOperational
+        ? "An unexpected error occurred"
+        : err.message,
+    stack: !isProduction ? err.stack : undefined,
   });
 };
 

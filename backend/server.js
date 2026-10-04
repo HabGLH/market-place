@@ -6,6 +6,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "node:url";
@@ -43,7 +44,7 @@ const express5MongoSanitize = (req, res, next) => {
 };
 
 // Middleware
-app.use(helmet({ crossOriginResourcePolicy: false })); // allow static image fetching
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(requestLogger); // Log requests early
 app.post(
   "/api/payments/webhook",
@@ -54,6 +55,19 @@ app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 app.use(express5MongoSanitize);
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+
+// Global API rate limiter
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // Limit each IP to 200 requests per window
+    skip: () => process.env.NODE_ENV === "test",
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests, please try again later" },
+  }),
+);
 
 // Serve static files
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -120,6 +134,17 @@ if (process.env.NODE_ENV !== "test" && isMainModule) {
   };
 
   process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
+
+  process.on("unhandledRejection", (err) => {
+    logger.error(`Unhandled Rejection: ${err?.message || err}`);
+    shutdown("unhandledRejection");
+  });
+  process.on("uncaughtException", (err) => {
+    logger.error(`Uncaught Exception: ${err?.message || err}`);
+    process.exitCode = 1;
+    shutdown("uncaughtException");
+  });
 
   connectDB()
     .then(() => {

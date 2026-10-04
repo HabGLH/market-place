@@ -13,6 +13,8 @@ services:
       - ACCESS_TOKEN_LIFE=30m
       - REFRESH_TOKEN_LIFE=30d
       - NODE_ENV=production
+    volumes:
+      - uploads-data:/app/uploads
     depends_on:
       - mongo
     networks:
@@ -29,6 +31,7 @@ services:
 
 volumes:
   mongo-data:
+  uploads-data:
 
 networks:
   ecommerce-network:

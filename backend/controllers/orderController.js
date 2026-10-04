@@ -66,11 +66,28 @@ export const getAllOrders = asyncHandler(async (req, res) => {
   res.json(orders);
 });
 
+// Allowed order status transitions
+const ALLOWED_TRANSITIONS = {
+  Pending: ["Processing", "Cancelled", "Failed"],
+  Processing: ["Shipped", "Cancelled", "Failed"],
+  Shipped: ["Delivered", "Cancelled"],
+  Delivered: [],
+  Cancelled: [],
+  Failed: [],
+};
+
 //update order status (admin)
 export const updateOrderStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   const order = await Order.findById(req.params.id);
   if (order) {
+    const allowed = ALLOWED_TRANSITIONS[order.orderStatus] || [];
+    if (!allowed.includes(status)) {
+      throw new AppError(
+        `Invalid order status transition from '${order.orderStatus}' to '${status}'`,
+        400,
+      );
+    }
     order.orderStatus = status;
     await order.save();
     res.json(order);

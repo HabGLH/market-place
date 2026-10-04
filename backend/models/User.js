@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      // select: false, // Exclude password field by default when querying
+      select: false, // Exclude password field by default when querying
     },
     role: {
       type: Number,

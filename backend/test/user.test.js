@@ -92,7 +92,7 @@ describe("User API", () => {
 
   it("should block a user (Admin)", async () => {
     const res = await request(app)
-      .put(`/api/users/${userId}`)
+      .put(`/api/users/${userId}/disable`)
       .set("Authorization", `Bearer ${adminToken}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.message).toMatch(/disabled|blocked/i);

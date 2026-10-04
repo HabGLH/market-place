@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import useAuth from "./useAuth";
 import ErrorMessage from "../components/ErrorMessage";
+import Loader from "../components/Loader";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -9,11 +10,19 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { user, loading, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || (user?.role === "admin" ? "/admin" : "/");
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (user) {
+    return <Navigate to={from} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

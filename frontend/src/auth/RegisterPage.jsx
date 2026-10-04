@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import useAuth from "./useAuth";
 import ErrorMessage from "../components/ErrorMessage";
+import Loader from "../components/Loader";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +14,17 @@ const RegisterPage = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register } = useAuth();
+  const { user, loading, register } = useAuth();
   const navigate = useNavigate();
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (user) {
+    const destination = user.role === "admin" ? "/admin" : "/";
+    return <Navigate to={destination} replace />;
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

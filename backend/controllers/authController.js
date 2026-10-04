@@ -79,7 +79,7 @@ export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const ipAddress = req.ip;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
     throw new AppError("User not exist", 400);
   }

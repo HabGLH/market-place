@@ -1,4 +1,5 @@
 import ActivityLog from "../models/ActivityLog.js";
+import logger from "./logger.js";
 
 export const logActivity = async ({ userId, action, details, entityType = "System", entityId = null, req = null }) => {
   try {
@@ -12,6 +13,6 @@ export const logActivity = async ({ userId, action, details, entityType = "Syste
       ipAddress,
     });
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    logger.error(`Failed to log activity: ${error.message}`);
   }
 };

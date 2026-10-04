@@ -26,7 +26,7 @@ export const getMe = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/me
 // @access  Private
 export const updateMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select("+password");
   if (user) {
     const emailChanged = req.body.email && req.body.email !== user.email;
     const passwordChanged = Boolean(req.body.password);
@@ -40,7 +40,7 @@ export const updateMe = asyncHandler(async (req, res) => {
         user.password,
       );
       if (!currentPasswordMatches) {
-        throw new AppError("Current password is incorrect", 400);
+        throw new AppError("Current password is incorrect", 401);
       }
     }
 

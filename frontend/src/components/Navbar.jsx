@@ -6,7 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 import { getCart } from "../api/cartApi";
 
 const Navbar = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -180,7 +180,9 @@ const Navbar = () => {
             </button>
 
             {/* Auth Buttons / Profile */}
-            {!user ? (
+            {loading ? (
+              <div className="h-9 w-24 bg-white/20 dark:bg-gray-800 rounded-xl animate-pulse" />
+            ) : !user ? (
               <div className="flex items-center gap-3">
                 <Link
                   to="/login"
@@ -422,7 +424,11 @@ const Navbar = () => {
             Home
           </Link>
 
-          {user ? (
+          {loading ? (
+            <div className="py-4 text-center">
+              <div className="h-8 w-32 mx-auto bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+            </div>
+          ) : user ? (
             <>
               <Link
                 to="/cart"
