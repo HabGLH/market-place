@@ -59,6 +59,9 @@ Render services use dynamic IP addresses. If MongoDB Atlas blocks requests outsi
 | `ACCESS_TOKEN_SECRET` | Long random secret string (e.g. 32+ chars) | Yes |
 | `ACCESS_TOKEN_LIFE` | `15m` | Yes |
 | `CLIENT_URL` | `https://your-frontend.onrender.com` or Vercel URL | Yes |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Required for production image uploads |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | Required for production image uploads |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | Required for production image uploads |
 | `CHAPA_SECRET_KEY` | `CHASECK_TEST-xxxx...` | Yes |
 | `CHAPA_WEBHOOK_SECRET` | `your-webhook-secret` | Yes |
 | `SHIPPING_FEE_ETB` | `100` | Yes |

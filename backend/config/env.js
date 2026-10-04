@@ -20,6 +20,23 @@ export const validateEnv = (env = process.env) => {
     throw new Error("MONGO_URL must be a valid MongoDB connection URL");
   }
 
+  const cloudinaryVariables = [
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
+  ];
+  const configuredCloudinaryVariables = cloudinaryVariables.filter((name) =>
+    env[name]?.trim(),
+  );
+  if (
+    configuredCloudinaryVariables.length > 0 &&
+    configuredCloudinaryVariables.length < cloudinaryVariables.length
+  ) {
+    throw new Error(
+      `Cloudinary configuration requires all of: ${cloudinaryVariables.join(", ")}`,
+    );
+  }
+
   try {
     new URL(env.CLIENT_URL);
   } catch {

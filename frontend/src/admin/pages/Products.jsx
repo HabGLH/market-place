@@ -11,6 +11,7 @@ import Loader from "../../components/Loader";
 import ErrorMessage from "../../components/ErrorMessage";
 import useFeedback from "../../hooks/useFeedback";
 import { formatPrice } from "../../utils/formatters";
+import config from "../../config/env";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -72,9 +73,14 @@ const Products = () => {
       setUploadingImage(true);
       try {
         const res = await uploadFile(file);
-        // The backend returns the URL of the uploaded image. We might need to prepend the backend base URL or assume the backend URL is prepended.
-        // Assuming res.image is "/uploads/file.png"
-        const imageUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace('/api', '')}${res.image}` : `http://localhost:5000${res.image}`;
+        const apiOrigin = /^https?:\/\//i.test(config.API_BASE_URL)
+          ? config.API_BASE_URL.replace(/\/api\/?$/, "")
+          : import.meta.env.DEV
+            ? "http://localhost:5000"
+            : window.location.origin;
+        const imageUrl = /^https?:\/\//i.test(res.image)
+          ? res.image
+          : `${apiOrigin}${res.image.startsWith("/") ? "" : "/"}${res.image}`;
         setNewProduct((prev) => ({ ...prev, image: imageUrl }));
         notify("Image uploaded successfully");
       } catch (err) {

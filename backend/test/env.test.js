@@ -21,6 +21,22 @@ describe("environment validation", () => {
     );
   });
 
+  it("requires all Cloudinary credentials when any are configured", () => {
+    expect(() =>
+      validateEnv({ ...validEnv, CLOUDINARY_CLOUD_NAME: "cloud" }),
+    ).toThrow(
+      "Cloudinary configuration requires all of: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET",
+    );
+    expect(() =>
+      validateEnv({
+        ...validEnv,
+        CLOUDINARY_CLOUD_NAME: "cloud",
+        CLOUDINARY_API_KEY: "key",
+        CLOUDINARY_API_SECRET: "secret",
+      }),
+    ).not.toThrow();
+  });
+
   it("rejects invalid connection and client URLs", () => {
     expect(() => validateEnv({ ...validEnv, MONGO_URL: "localhost" })).toThrow(
       "MONGO_URL must be a valid MongoDB connection URL",
